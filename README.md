@@ -6,6 +6,8 @@
 
 ![Zen](https://img.shields.io/badge/Zen-1.24.1b-black) ![Sine](https://img.shields.io/badge/Sine-mod-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
+<img src="https://github.com/adamain/arczen/releases/download/v1.0.0/overview.png" width="820" alt="A Zen window with ArcZen: the sidebar blended into the window and the page laid out as a card">
+
 </div>
 
 > [!NOTE]
@@ -15,6 +17,7 @@
 
 ## Contents
 
+- [Preview](#preview)
 - [What ArcZen does](#what-arczen-does)
 - [Installation](#installation)
 - [Settings](#settings)
@@ -24,6 +27,28 @@
 - [Uninstalling](#uninstalling)
 - [Reporting a problem](#reporting-a-problem)
 - [License and credits](#license-and-credits)
+
+## Preview
+
+**Tidy** sorts the day's tabs into sections.
+
+<img src="https://github.com/adamain/arczen/releases/download/v1.0.0/tidy.gif" width="720" alt="Tidy groups seven tabs into three sections">
+
+**Folder preview**: hover a collapsed folder to see its tabs.
+
+<img src="https://github.com/adamain/arczen/releases/download/v1.0.0/folder-preview.gif" width="720" alt="A card lists the three tabs of a collapsed folder on hover">
+
+**Command bar**: a centered panel for addresses and searches.
+
+<img src="https://github.com/adamain/arczen/releases/download/v1.0.0/command-bar.gif" width="720" alt="The command bar opens in the middle of the window and lists suggestions">
+
+**Little Arc** opens a link coming from another app in a small window, then sends it to the main window.
+
+<img src="https://github.com/adamain/arczen/releases/download/v1.0.0/little-arc.gif" width="720" alt="A link opens in a small window, then moves to the main window as a tab">
+
+**Picture-in-Picture** opens when you leave the tab of a playing video, and closes when you come back.
+
+<img src="https://github.com/adamain/arczen/releases/download/v1.0.0/pip.gif" width="720" alt="A playing video moves to a floating player when another tab is selected">
 
 ## What ArcZen does
 

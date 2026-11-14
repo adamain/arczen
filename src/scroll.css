@@ -1,0 +1,157 @@
+/* Défilement de la liste d'onglets façon Arc.
+   - Barre de défilement fine et grise à droite, piste invisible.
+   - Pastille « revenir à l'onglet actif » : celle de Zen (.zen-workspace-scroll-to-tab), qui
+     sait déjà quand l'onglet actif sort de la zone visible et de quel côté, redessinée en disque
+     blanc à flèche noire comme dans Arc. */
+
+/* --- Barre de défilement --- Arc (A8) : capsule de 3,4 pt, extrémités rondes, blanc ≈ 37 %
+   (111 sur un fond de 26), à 2 pt du bord droit intérieur du panneau, piste invisible, hauteur
+   proportionnelle (≥ 24 pt), sans décaler les onglets.
+   Sous Windows 11, Firefox utilise des barres « superposées » : elles ne s'affichent que
+   pendant le défilement, s'effacent aussitôt, ne réagissent pas au survol de la sidebar et ne
+   se règlent ni en largeur ni en forme. arczen.uc.js masque donc la barre native de chaque
+   liste (classe .arczen-tablist posée sur la scrollbox du shadow DOM, hors de portée de
+   ::part pour une feuille utilisateur) et ajoute une capsule .arczen-scrollthumb, placée par
+   transform. Sans le script, la barre native reste. */
+scrollbox.arczen-tablist {
+  scrollbar-width: none !important;
+}
+
+/* --- Défilement aligné sur les onglets --- Au repos, le haut de la liste tombe toujours sur
+   le haut d'un onglet, d'un dossier ou du bouton New Tab : jamais d'onglet coupé sous le titre.
+   « mandatory » plutôt que « proximity » : le seuil de proximité de Gecko (200 px) dépasse de
+   loin le pas des onglets, les deux se comportent donc pareil à la molette, au scrollTo et au
+   scrollIntoView de Zen ; « mandatory » garantit en plus l'alignement après une fermeture
+   d'onglet ou un dossier déplié. Pendant un glissement d'onglet ([movingtab]), l'accroche est
+   suspendue : sinon chaque petit pas du défilement automatique sauterait un onglet entier.
+   Le séparateur des épinglés n'est pas un point d'accroche : posé en haut, son filet doublerait
+   celui que Zen trace au bord de la liste défilée. */
+scrollbox.arczen-tablist {
+  scroll-snap-type: y mandatory !important;
+}
+/* Pendant un défilement à la molette ou au pavé tactile, l'accroche est levée (classe posée
+   par arczen.uc.js) : sinon chaque petit pas sautait à l'onglet suivant ou revenait au
+   précédent, d'où un défilement saccadé, presque immobile au pavé tactile. À la fin du
+   défilement, le script rétablit l'accroche et la liste rejoint en douceur l'onglet le plus
+   proche : au repos, toujours aucun onglet coupé. */
+scrollbox.arczen-tablist.arczen-free {
+  scroll-snap-type: none !important;
+}
+zen-workspace .workspace-arrowscrollbox :is(tab.tabbrowser-tab, zen-folder > .tab-group-label-container, #tabbrowser-arrowscrollbox-periphery) {
+  scroll-snap-align: start;
+}
+/* Haut de la liste : point d'accroche lui aussi. Sinon, en haut d'un espace aux épinglés repliés,
+   la vue s'accroche au premier onglet visible ; au dépliage, Gecko la ré-accroche à cet onglet,
+   qui descend sous les dossiers revenus : la liste défilait au lieu de rester en haut. */
+zen-workspace .workspace-arrowscrollbox .zen-workspace-pinned-tabs-section {
+  scroll-snap-align: start;
+}
+/* Suspension pendant le glissement : la scrollbox est dans le shadow DOM, hors de portée d'un
+   sélecteur d'ancêtre ; on retire donc les points d'accroche (DOM léger) plutôt que le type. */
+#navigator-toolbox[movingtab] zen-workspace .workspace-arrowscrollbox :is(tab.tabbrowser-tab, zen-folder > .tab-group-label-container, #tabbrowser-arrowscrollbox-periphery) {
+  scroll-snap-align: none;
+}
+/* Butée basse alignée elle aussi : complément calculé par arczen.uc.js (0 sans le script). */
+zen-workspace .zen-workspace-normal-tabs-section {
+  padding-block-end: var(--arczen-snap-pad, 0px) !important;
+}
+zen-workspace > .arczen-scrollthumb {
+  position: absolute;
+  top: 0;
+  right: calc(2px * var(--arc-scale));
+  z-index: 2;
+  width: calc(3.4px * var(--arc-scale));
+  height: calc(24px * var(--arc-scale));
+  border-radius: calc(1.7px * var(--arc-scale));
+  background-color: color-mix(in srgb, var(--arc-fg) 37%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  /* Disparition en fondu ; le délai sans défilement est compté par arczen.uc.js
+     (réglage « arczen.scrollbar-delay »). */
+  transition: opacity var(--arc-dur) var(--arc-ease);
+}
+/* Apparition immédiate dès le défilement. */
+zen-workspace > .workspace-arrowscrollbox[overflowing] ~ .arczen-scrollthumb.arczen-scrolling {
+  opacity: 1;
+  transition-duration: 0s;
+}
+/* Réglage « Toujours visible » : la capsule reste affichée tant que la liste déborde. */
+@media -moz-pref("arczen.scrollbar-delay", "always") {
+  zen-workspace > .workspace-arrowscrollbox[overflowing] ~ .arczen-scrollthumb {
+    opacity: 1;
+  }
+}
+
+/* --- Revenir à l'onglet actif --- Arc : disque Ø 24,5 pt, dégradé 239 (haut) → 246 (bas),
+   flèche noire 8,4 × 10,5 pt (trait 1,4), centré, 5 pt sous le titre (vers le haut) ou au-dessus
+   du bas de la liste (vers le bas).
+   Zen montre la pastille en retirant [hidden] puis l'anime (ressort), et la cache par une
+   animation de 120 ms suivie de [hidden]. Les déclarations !important d'une feuille utilisateur
+   passent devant ces animations : seule la transition ci-dessous s'applique (opacité +
+   transform). [hidden] est neutralisé pour que la disparition s'anime aussi ; caché, le disque
+   ne reçoit plus la souris. Sidebar repliée : Zen le masque (display: none), on n'y touche pas. */
+:root[zen-sidebar-expanded="true"] .zen-workspace-scroll-to-tab {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  width: calc(24.5px * var(--arc-scale)) !important;
+  height: calc(24.5px * var(--arc-scale)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-radius: 50% !important;
+  background: linear-gradient(rgb(239, 239, 239), rgb(246, 246, 246)) !important;
+  box-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+  color: black !important;
+  opacity: 1 !important;
+  transform: none !important;
+  scale: none !important;
+  transform-origin: center !important;
+  transition:
+    opacity var(--arc-dur) var(--arc-ease),
+    transform var(--arc-dur) var(--arc-ease) !important;
+
+  &[direction="up"] {
+    top: calc(var(--zen-scroll-to-tab-top, 0px) + 5px * var(--arc-scale)) !important;
+  }
+  &[direction="down"] {
+    bottom: calc(var(--zen-scroll-to-tab-bottom, 0px) + 5px * var(--arc-scale)) !important;
+  }
+  &[hidden] {
+    opacity: 0 !important;
+    transform: translateY(calc(-6px * var(--arc-scale))) scale(0.85) !important;
+    pointer-events: none !important;
+  }
+  &[hidden][direction="down"] {
+    transform: translateY(calc(6px * var(--arc-scale))) scale(0.85) !important;
+  }
+  &:not([hidden]):active {
+    transform: scale(0.92) !important;
+  }
+
+  /* Ni favicon ni flèche de Zen : une seule flèche noire, vectorielle. */
+  & .zen-workspace-scroll-to-tab-icon {
+    display: none !important;
+  }
+  & .zen-workspace-scroll-to-tab-arrow {
+    width: calc(8.4px * var(--arc-scale)) !important;
+    height: calc(10.5px * var(--arc-scale)) !important;
+    margin: 0 !important;
+    list-style-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.4 10.5'%3E%3Cpath d='M4.2 9.8V0.7M0.7 4.2L4.2 0.7L7.7 4.2' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    transform: none !important;
+  }
+  &[direction="down"] .zen-workspace-scroll-to-tab-arrow {
+    transform: rotate(180deg) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[zen-sidebar-expanded="true"] .zen-workspace-scroll-to-tab {
+    transition: none !important;
+  }
+  zen-workspace > .arczen-scrollthumb {
+    transition-duration: 0s;
+  }
+}

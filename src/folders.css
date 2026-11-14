@@ -1,0 +1,232 @@
+/* Dossiers (lot T ; logique dans arczen.uc.js, bloc « Dossiers et titres »).
+   Les dossiers gardent le dessin de dossier d'Arc (tabs.css) : ni couleur ni emoji ajoutés.
+   Ce fichier ne dessine que la carte d'aperçu d'un dossier replié (#arczen-folder-card),
+   créée à la demande. */
+
+/* --- Cartes d'aperçu : dossier replié (#arczen-folder-card) et Gmail (#arczen-gmail-card) ---
+   Même carte pour les deux : c'est le panneau lui-même qui porte le fond, l'arrondi et
+   l'ombre, comme les panneaux de Zen. Aucun cadre ne peut donc apparaître autour de la carte
+   quand la fenêtre du panneau n'est pas transparente (ancien rectangle sombre ou blanc). Pas
+   de matière acrylique de Windows : elle imposait ses propres coins (petit rayon fixe, bord
+   gris). Arrondi et forme de coin de la sidebar (panneau compact, --arc-radius-panel), fond
+   opaque et liserés de la barre de commande. */
+:is(#arczen-folder-card, #arczen-gmail-card) {
+  appearance: none !important;
+  --agm-bg: var(--arc-cmd-bg-opaque);
+  --panel-background: var(--agm-bg) !important;
+  --panel-background-color: var(--agm-bg) !important;
+  --arrowpanel-background: var(--agm-bg) !important;
+  --panel-color: var(--arc-fg) !important;
+  --panel-border-color: var(--arc-cmd-ring-in) !important;
+  --panel-border-radius: var(--arc-radius-panel) !important;
+  --panel-padding: 0px !important;
+  --panel-box-shadow: 0 0 0 0.5px var(--arc-cmd-ring-out), 0 6px 16px -4px light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.5)) !important;
+}
+:is(#arczen-folder-card, #arczen-gmail-card)::part(content) {
+  corner-shape: var(--arc-corner-shape) !important;
+}
+.arczen-fc {
+  display: flex !important;
+  flex-direction: column !important;
+  width: calc(264px * var(--arc-scale)) !important;
+  padding: calc(5px * var(--arc-scale)) !important;
+  color: var(--arc-fg) !important;
+  font-size: var(--arc-font-tab) !important;
+  letter-spacing: var(--arc-tracking) !important;
+}
+/* Icône de dossier de l'en-tête : le dessin de Zen (copié du dossier) occupe 23,8 px sur 28,
+   d'où la boîte agrandie, recentrée par des marges négatives (même emprise qu'un favicon). */
+.arczen-fc-icon {
+  --arczen-folder-box: calc(var(--arc-icon) * 1.176);
+  flex: none !important;
+  display: flex !important;
+  width: var(--arczen-folder-box) !important;
+  height: var(--arczen-folder-box) !important;
+  margin-inline: calc((var(--arc-icon) - var(--arczen-folder-box)) / 2) !important;
+
+  & svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+/* Entrée (opacité et translation, 140 ms) jouée par le script, sauf mouvement réduit. */
+.arczen-fc-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: calc(8px * var(--arc-scale)) !important;
+  height: calc(28px * var(--arc-scale)) !important;
+  padding-inline: calc(7px * var(--arc-scale)) !important;
+  border-radius: calc(6px * var(--arc-scale) * var(--arc-corner-k)) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+  cursor: default;
+
+  &:hover {
+    background: var(--arc-hover-bg) !important;
+  }
+  &[selected] {
+    background: var(--arc-active-bg) !important;
+  }
+  & > img {
+    flex: none !important;
+    width: var(--arc-icon) !important;
+    height: var(--arc-icon) !important;
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
+  & > span {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    color: var(--arc-fg-tab) !important;
+  }
+}
+.arczen-fc-more > span {
+  color: var(--arc-fg-dim) !important;
+}
+.arczen-fc-more > .arczen-fc-plus {
+  flex: none !important;
+  width: var(--arc-icon) !important;
+  text-align: center !important;
+  color: var(--arc-fg-dim) !important;
+}
+
+/* --- Aperçu Gmail au survol (#arczen-gmail-card ; logique dans arczen.uc.js) ---
+   Carte commune ci-dessus : en-tête « Principale » (ou « Boîte de réception », réglage
+   arczen.gmail-category) avec le nombre de non-lus et un bouton pour écrire, puis les e-mails
+   non lus (expéditeur et heure, objet, extrait), comme l'aperçu Gmail d'Arc.
+   L'en-tête (.arczen-gm-head, -title, -count) sert aussi à la carte de dossier : icône du
+   dossier, nom, nombre d'onglets. */
+.arczen-gm-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: calc(8px * var(--arc-scale)) !important;
+  height: calc(30px * var(--arc-scale)) !important;
+  padding-inline: calc(7px * var(--arc-scale)) calc(3px * var(--arc-scale)) !important;
+  border-radius: calc(6px * var(--arc-scale) * var(--arc-corner-k)) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+  cursor: default;
+
+  & > img {
+    flex: none !important;
+    width: var(--arc-icon) !important;
+    height: var(--arc-icon) !important;
+  }
+}
+.arczen-gm-title {
+  flex: 1 !important;
+  min-width: 0 !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+.arczen-gm-count {
+  flex: none !important;
+  padding-inline: calc(6px * var(--arc-scale)) !important;
+  line-height: calc(17px * var(--arc-scale)) !important;
+  border-radius: calc(9px * var(--arc-scale)) !important;
+  background: var(--arc-hover-bg) !important;
+  color: var(--arc-fg-dim) !important;
+  font-size: 0.85em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.arczen-gm-compose {
+  appearance: none !important;
+  flex: none !important;
+  width: calc(24px * var(--arc-scale)) !important;
+  height: calc(24px * var(--arc-scale)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: calc(5px * var(--arc-scale) * var(--arc-corner-k)) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+  background: transparent !important;
+  color: var(--arc-fg-dim) !important;
+  cursor: default;
+
+  &::before {
+    content: "" !important;
+    display: block !important;
+    width: calc(14px * var(--arc-scale)) !important;
+    height: calc(14px * var(--arc-scale)) !important;
+    margin: auto !important;
+    background: currentColor !important;
+    mask: url("chrome://global/skin/icons/plus.svg") center / contain no-repeat !important;
+  }
+  &:hover {
+    background: var(--arc-hover-bg) !important;
+    color: var(--arc-fg) !important;
+  }
+  &:hover:active {
+    background: var(--arc-active-bg) !important;
+  }
+}
+.arczen-gm-list {
+  display: flex !important;
+  flex-direction: column !important;
+  --agm-rows: 6;
+  max-height: calc(var(--agm-rows) * 62px * var(--arc-scale)) !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  overscroll-behavior: contain !important;
+}
+/* Réglage « Hauteur de l'aperçu Gmail ». */
+@media -moz-pref("arczen.gmail-rows", "4") { .arczen-gm-list { --agm-rows: 4; } }
+@media -moz-pref("arczen.gmail-rows", "8") { .arczen-gm-list { --agm-rows: 8; } }
+@media -moz-pref("arczen.gmail-rows", "10") { .arczen-gm-list { --agm-rows: 10; } }
+.arczen-gm-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: calc(1px * var(--arc-scale)) !important;
+  padding: calc(6px * var(--arc-scale)) calc(7px * var(--arc-scale)) !important;
+  border-radius: calc(6px * var(--arc-scale) * var(--arc-corner-k)) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+  cursor: default;
+
+  &:hover {
+    background: var(--arc-hover-bg) !important;
+  }
+  &:hover:active {
+    background: var(--arc-active-bg) !important;
+  }
+  & > div {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+  }
+}
+.arczen-gm-top {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: calc(8px * var(--arc-scale)) !important;
+}
+.arczen-gm-from {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  font-weight: 600 !important;
+  color: var(--arc-fg) !important;
+}
+.arczen-gm-time {
+  flex: none !important;
+  font-size: 0.85em !important;
+  color: var(--arc-fg-dim) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.arczen-gm-subject {
+  color: var(--arc-fg-tab) !important;
+}
+.arczen-gm-snippet {
+  font-size: 0.9em !important;
+  color: var(--arc-fg-dim) !important;
+}
+.arczen-gm-empty {
+  padding: calc(14px * var(--arc-scale)) calc(7px * var(--arc-scale)) !important;
+  text-align: center !important;
+  color: var(--arc-fg-dim) !important;
+}

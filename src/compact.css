@@ -1,0 +1,39 @@
+/* Mode compact de Zen : la sidebar masquée qui flotte au survol devient un panneau d'Arc.
+   Écart de --arc-float-gap (≈ 4,5 pt) à gauche, en haut et en bas, indépendant de l'épaisseur
+   des bords de la page ; coin continu de --arc-radius-panel (cercle équivalent de 10 pt) ;
+   contour d'1 px (blanc ≈ 28 % en sombre) en bordure intérieure du ::after, sans effet sur
+   la mise en page ; ombre statique.
+   En mode normal, Zen ne présente pas la sidebar comme un panneau : rien n'y est appliqué. */
+
+/* Position : Zen place le panneau à float/2 du bord (float = --zen-compact-float),
+   on double donc l'écart voulu. En barre unique, Zen ajoute 1 px en haut sous Windows
+   (bord de fenêtre) et laisse float/2 en bas : on fixe haut et bas à l'écart exact. */
+:root[zen-compact-mode="true"]:not([customizing]):not([inDOMFullscreen="true"]) #navigator-toolbox {
+  --zen-compact-float: calc(var(--arc-float-gap) * 2) !important;
+}
+:root[zen-compact-mode="true"][zen-single-toolbar="true"]:not([customizing]):not([inDOMFullscreen="true"]) #navigator-toolbox {
+  top: var(--arc-float-gap) !important;
+  height: calc(100% - var(--arc-float-gap) * 2) !important;
+}
+
+/* Surface du panneau : plus spécifique que Nova UI (qui retire le contour et impose son rayon).
+   Les pseudo-éléments portent le fond (dégradé de Zen) et recouvrent l'élément : le contour
+   est donc un outline intérieur sur ::after (une seule fois, Zen le posait sur les deux). */
+:root[zen-compact-mode="true"] #navigator-toolbox #titlebar > .zen-toolbar-background {
+  /* Coin continu d'Arc (A2 : équivalent d'un cercle de 10 pt) : règle de tokens.css. */
+  border-radius: var(--arc-radius-panel) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
+
+  &::before,
+  &::after {
+    border-radius: var(--arc-radius-panel) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+    outline: none !important;
+  }
+  /* Bordure plutôt qu'outline intérieur : c'est la bordure que corner-shape découpe à coup
+     sûr (le pseudo-élément est posé en inset: 0, la bordure reste à l'intérieur). */
+  &::after {
+    border: 1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.28)) !important;
+  }
+}

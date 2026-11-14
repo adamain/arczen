@@ -1,0 +1,62 @@
+/* ArcZen — toast « New Tab Created »
+   Zen annonce un onglet ouvert en arrière-plan par un toast « New background tab opened » avec
+   un bouton « Open ». arczen.uc.js le marque [arczen-newtab], remplace le libellé par
+   « New Tab Created » et rend tout le toast cliquable (aller à l'onglet). Ici : l'habillage de la
+   capture Arc de l'utilisateur, texte blanc, sans bouton, un peu écarté des bords de la fenêtre.
+   Matière de la barre de commande : la page sous le toast, capturée une fois, floutée et saturée
+   (.arczen-toast-glass, arczen.uc.js), sous une teinte grise translucide, avec ses deux liserés.
+   Sans capture (page privilégiée, « arczen.cmd-no-blur », transparence réduite) ou avant son
+   arrivée : fond gris opaque de même teinte. Les autres toasts de Zen ne changent pas. */
+
+#zen-toast-container .zen-toast[arczen-newtab] {
+  /* écart supplémentaire aux bords (Zen : max(4 px, séparation des éléments)) */
+  --arczen-toast-shift: calc(6px * var(--arc-scale));
+  --zen-toast-max-height: calc(36px * var(--arc-scale)) !important;
+  translate: calc(-1 * var(--arczen-toast-shift)) var(--arczen-toast-shift) !important;
+  :root[zen-right-side="true"] & {
+    translate: calc(100% + var(--arczen-toast-shift)) var(--arczen-toast-shift) !important;
+  }
+  isolation: isolate;
+  padding: 0 calc(12px * var(--arc-scale)) !important;
+  border-radius: calc(10px * var(--arc-scale) * var(--arc-corner-k)) !important;
+  corner-shape: var(--arc-corner-shape);
+  /* repli opaque : la teinte ci-dessous posée sur une page blanche */
+  background: linear-gradient(to bottom, rgb(76, 76, 76), rgb(57, 57, 57)) !important;
+  border: none !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 0 0 0.5px rgba(0, 0, 0, 0.85),
+    0 calc(4px * var(--arc-scale)) calc(14px * var(--arc-scale)) rgba(0, 0, 0, 0.28) !important;
+  color: #fff !important;
+  font-size: calc(14px * var(--arc-scale)) !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+
+  & label { color: #fff !important; }
+  /* le bouton d'origine reste dans le DOM (Zen le remplace à chaque nouvel onglet) : caché */
+  & button { display: none !important; }
+
+  & > .arczen-toast-glass {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    corner-shape: inherit;
+    overflow: clip;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+
+    &[ready] { opacity: 1; }
+    & > canvas { position: absolute; }
+    /* teinte de la barre de commande, éclaircie en haut comme la référence d'Arc */
+    & > .tint {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      corner-shape: inherit;
+      background: linear-gradient(to bottom, rgba(36, 36, 36, 0.82), rgba(24, 24, 24, 0.86));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    }
+  }
+}

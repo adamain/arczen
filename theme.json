@@ -1,0 +1,27 @@
+{
+  "id": "zen-arczen",
+  "name": "ArcZen",
+  "description": "Arc's ergonomics for Zen: blended sidebar, command bar, tab tidying, Little Arc and a polished Picture-in-Picture. Lightweight by design.",
+  "homepage": "https://github.com/adamain/arczen",
+  "readme": "https://raw.githubusercontent.com/adamain/arczen/main/README.md",
+  "author": "adamain",
+  "version": "1.0.0",
+  "createdAt": "2026-11-14",
+  "updatedAt": "2026-11-14",
+  "tags": ["arc", "sidebar", "command-bar", "tabs", "picture-in-picture"],
+  "fork": ["zen"],
+  "license": "MIT",
+  "style": { "chrome": "src/arczen.css" },
+  "preferences": "src/preferences.json",
+  "scripts": {
+    "src/arczen.uc.js": {
+      "name": "ArcZen",
+      "description": "Command bar, tab sections and tidying, Little Arc, renamed downloads, PiP",
+      "include": [
+        "chrome://browser/content/browser.xhtml",
+        "chrome://global/content/pictureinpicture/player.xhtml"
+      ]
+    }
+  },
+  "supportsUnload": true
+}

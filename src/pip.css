@@ -1,0 +1,444 @@
+/* Fenêtre Picture-in-Picture façon Arc (refs/retour-2/08-zen-pip.webp) : interface très
+   minimaliste construite sur le DOM natif de player.xhtml.
+   - Centre : lecture/pause au centre de la fenêtre, sauts arrière/avant de part et d'autre,
+     icônes blanches sans fond.
+   - Bas : une seule barre de progression fine, sans curseur rond, qui s'épaissit au survol.
+   - Haut : « ↖ Back to Tab » à gauche ; à droite « — Minimize | ✕ Close », deux boutons séparés
+     par un trait fin, sans fond au repos : le fond gris n'apparaît qu'au survol de chaque
+     bouton (pas de domaine du site).
+   - Tout le reste (minutage, volume, sous-titres, vitesse, plein écran, dégradé du bas) est
+     masqué en CSS uniquement : rien n'est retiré du DOM, les raccourcis clavier restent actifs.
+   Les mesures de la référence (PiP 16:9) sont données en proportion du petit côté de la
+   fenêtre (vmin : la hauteur en paysage, la largeur en vertical), bornées par clamp() : un
+   PiP 16:9 garde exactement les cotes de la référence, une vidéo verticale (Shorts) ou carrée
+   garde des boutons proches des coins au lieu de les voir descendre avec la hauteur. Les
+   commandes centrales suivent la hauteur d'un cadre 4:3 inscrit dans la fenêtre (min(vh,
+   0,75 vw)) : en vertical, le trio tient dans la largeur sans grossir démesurément.
+   L'apparition au survol reste le mécanisme natif (opacité, 160 ms).
+   La feuille Sine est une feuille utilisateur : `@-moz-document` y est permis et limite ces
+   règles au lecteur PiP ; `!important` est nécessaire pour passer devant player.css (auteur).
+   Le pref « arczen.native-pip » rend le PiP d'origine (style ici, double-clic dans arczen.uc.js). */
+@media not -moz-pref("arczen.native-pip") {
+  @-moz-document url("chrome://global/content/pictureinpicture/player.xhtml") {
+    :root {
+      /* Haut : corps du texte = 2,5 % de la largeur en 16:9 (24 px pour 950 × 534 sur la
+         référence, soit 4,45 vmin), plafonné à 3 vw pour que les libellés tiennent dans une
+         fenêtre presque carrée, borné pour rester lisible à 300 px et raisonnable à 1300 px ;
+         rangée (et pilule) de 2,33 em (56 px), tracé de l'icône ≈ 0,67 em (15-17 px), écart
+         tracé → texte ≈ 0,85 em (20-21 px). */
+      --arczen-pip-font: clamp(11px, min(4.45vmin, 3vw), 28px);
+      --arczen-pip-row: 2.33em; /* hauteur de la pilule et des fonds de survol */
+      --arczen-pip-radius: 0.37em; /* 0,16 × hauteur (Arc E1 : ≈ 9 px pour 56 px) */
+      /* Marge interne visuelle, égale des deux côtés : bord de pilule (ou de fond de survol) →
+         tracé de l'icône, et fin du texte → bord (Arc : 24 px pour 24 px de corps). */
+      --arczen-pip-pad: 1em;
+      --arczen-pip-icon: 1.05em; /* boîte de l'icône Zen 18 px : tracé ≈ 0,67 em… */
+      --arczen-pip-inset: 0.19em; /* …en retrait de 0,19 em dans sa boîte */
+      --arczen-pip-gap: 0.66em; /* + retrait du tracé = 0,85 em entre tracé et texte */
+      /* Écart entre « Minimize » et « Close » : le trait de séparation est en son milieu, les
+         fonds de survol des deux boutons ne le touchent pas. */
+      --arczen-pip-sep: 1em;
+      /* Centre (unité : hauteur du cadre 4:3 inscrit, min(1vh, 0,75vw)) : les barres de pause
+         font 25 % de cette hauteur (elles occupent 12/16 de l'icône), les sauts un cercle de
+         14 % (15/28 de l'icône native), centrés à 29,2 % de part et d'autre (16,4 % de la
+         largeur en 16:9). */
+      --arczen-pip-play: clamp(36px, min(33.3vh, 25vw), 240px);
+      --arczen-pip-seek: clamp(28px, min(26vh, 19.5vw), 190px);
+      --arczen-pip-dx: min(29.2vh, 21.9vw);
+      /* Bas : épaisseur 1,5 vmin, centre à 5,8 vmin au-dessus du bas, 6,05 vmin des bords
+         (3,4 % de la largeur en 16:9). */
+      --arczen-pip-bar: clamp(3px, 1.5vmin, 8px);
+      --arczen-pip-hit: clamp(12px, 4.5vmin, 22px);
+    }
+
+    /* ---------- Éléments natifs masqués (visuellement seulement) ---------- */
+    #timestamp,
+    #audio,
+    #audio-scrubber,
+    #playbackRate,
+    #playbackRateSettings,
+    #closed-caption,
+    #settings,
+    #fullscreen {
+      display: none !important;
+    }
+
+    /* Plus aucune bulle de texte (aria-label et attribut tooltip restent) ; le ::after des trois
+       boutons du haut porte leur libellé (plus bas). */
+    .control-item:not(#unpip, #minimize, #close)::after {
+      content: none !important;
+    }
+
+    /* Le bas de la fenêtre ne garde que la barre de progression : le reste du bloc laisse
+       passer la souris (double-clic sur le fond, déplacement de la fenêtre). */
+    #controls-bottom {
+      pointer-events: none !important;
+    }
+
+    /* Dégradé sombre du bas remplacé par un voile uniforme très léger sur toute la fenêtre,
+       qui suit l'opacité native des commandes (0 au repos, 0,8 au survol → ≈ 18 % de noir). */
+    #controls-bottom-gradient {
+      position: fixed !important;
+      inset: 0 !important;
+      width: auto !important;
+      height: auto !important;
+      margin: 0 !important;
+      background: rgba(0, 0, 0, 0.22) !important;
+      /* Purement décoratif : le double-clic et le déplacement visent toujours #controls. */
+      pointer-events: none !important;
+    }
+
+    /* ---------- Commandes centrales ---------- */
+    #seekBackward,
+    #playpause,
+    #seekForward {
+      position: fixed !important;
+      top: calc(50vh - var(--arczen-size) / 2) !important;
+      left: calc(50vw + var(--arczen-dx, 0px) - var(--arczen-size) / 2) !important;
+      width: var(--arczen-size) !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: var(--arczen-size) !important;
+      background-color: transparent !important;
+      background-size: 100% !important;
+      fill: #fff !important;
+      pointer-events: auto !important;
+    }
+
+    #playpause { --arczen-size: var(--arczen-pip-play); }
+    #seekBackward { --arczen-size: var(--arczen-pip-seek); --arczen-dx: calc(-1 * var(--arczen-pip-dx)); }
+    #seekForward { --arczen-size: var(--arczen-pip-seek); --arczen-dx: var(--arczen-pip-dx); }
+
+    /* Pause d'Arc : deux barres arrondies plus fines et plus espacées que l'icône native.
+       Le lecteur interdit les images data: (CSP « default-src chrome: ») : les barres sont
+       dessinées en CSS, une barre en ::before et la seconde par son ombre portée. */
+    #controls.playing #playpause {
+      background-image: none !important;
+    }
+
+    #controls.playing #playpause::before {
+      content: "";
+      position: absolute;
+      top: 12.5%;
+      left: 28.75%;
+      width: 13.1%;
+      height: 75%;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: calc(var(--arczen-size) * 0.294) 0 0 #fff;
+    }
+
+    /* Lecture : triangle natif ramené à la hauteur des barres de pause (75 % du bouton). */
+    #controls:not(.playing) #playpause {
+      background-size: 88% !important;
+    }
+
+    #seekBackward:active,
+    #playpause:active,
+    #seekForward:active {
+      transform: scale(0.92);
+    }
+
+    /* ---------- Barre de progression ---------- */
+    /* Le conteneur « no-drag » devient la zone cliquable de la barre, posée en bas de la
+       fenêtre ; affiché à toutes les tailles (Firefox le masque sous 200 px de haut). Si la
+       vidéo n'a pas de barre (direct, #scrubber[hidden]), il reste vide et transparent. */
+    .scrubber-no-drag {
+      display: grid !important;
+      position: fixed !important;
+      left: 6.05vmin !important;
+      right: 6.05vmin !important;
+      bottom: calc(5.8vmin - var(--arczen-pip-hit) / 2) !important;
+      width: auto !important;
+      height: var(--arczen-pip-hit) !important;
+      margin: 0 !important;
+      pointer-events: auto !important;
+    }
+
+    #scrubber {
+      width: 100% !important;
+      height: var(--arczen-pip-hit) !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      /* Épaississement au survol (+50 %) par une mise à l'échelle verticale, centrée sur la
+         barre : animée par le compositeur, sans relayout. La zone de saisie (le conteneur) ne
+         change pas, l'élément agrandi la déborde seulement. Les transitions natives d'opacité
+         (.control-item) sont conservées. */
+      transform-origin: 50% 50%;
+      transition: opacity 160ms linear, fill-opacity 160ms linear, transform 180ms ease-out !important;
+    }
+
+    /* Survol de la zone élargie, et maintien pendant un glissé (le pointeur peut en sortir). */
+    .scrubber-no-drag:hover > #scrubber,
+    #scrubber:active {
+      transform: scaleY(1.5);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #scrubber {
+        transition: opacity 160ms linear, fill-opacity 160ms linear !important;
+      }
+    }
+
+    #scrubber::-moz-range-track,
+    #scrubber::-moz-range-progress {
+      height: var(--arczen-pip-bar) !important;
+      border-radius: var(--arczen-pip-bar) !important;
+    }
+
+    #scrubber::-moz-range-track {
+      background-color: rgba(255, 255, 255, 0.35) !important;
+    }
+
+    #scrubber::-moz-range-progress {
+      background-color: #fff !important;
+    }
+
+    /* Pas de curseur rond visible (la barre reste cliquable et déplaçable). */
+    #scrubber::-moz-range-thumb {
+      width: var(--arczen-pip-bar) !important;
+      height: var(--arczen-pip-bar) !important;
+      border: 0 !important;
+      background: transparent !important;
+    }
+
+    /* ---------- Rangée du haut : « Back to Tab » … — Minimize ✕ Close ---------- */
+    /* #controls (plein cadre, au-dessus de la vidéo) devient une grille d'une rangée : ses seuls
+       enfants dans le flux sont les trois boutons du haut, tout le reste est en position
+       absolue ou fixe. Colonnes : retour | vide (reste de la place) | réduire | fermer ; le
+       trait de séparation est son ::after, posé au milieu de l'écart entre les deux derniers
+       boutons.
+       Toutes les cotes sont en em du corps de --arczen-pip-font (24 px sur la référence de
+       950 px) : la rangée garde ses proportions à toute taille. Coins en vmin (référence 16:9) :
+       tracé de la flèche à 10,85 vmin du bord gauche (6,1 % de la largeur), fin de « Close » à
+       10,5 vmin du bord droit (5,9 %), centre vertical à 11,4 vmin du haut (11,4 % de la
+       hauteur) ; en vertical, mêmes écarts rapportés à la largeur, donc près des coins
+       (5 px = marge native de #controls). */
+    #controls {
+      display: grid !important;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      align-content: start;
+      align-items: center;
+      box-sizing: border-box !important;
+      padding: max(0px, calc(11.4vmin - 5px - var(--arczen-pip-row) / 2))
+        max(0px, calc(10.5vmin - 5px - var(--arczen-pip-pad))) 0
+        max(0px, calc(10.85vmin - 5px - var(--arczen-pip-pad))) !important;
+      /* SF Pro comme le reste du mod (@font-face locale de window.css), sinon police système. */
+      font: 600 var(--arczen-pip-font) / 1 "ArcZen SF Pro", system-ui, sans-serif;
+    }
+
+    @media -moz-pref("arczen.system-font") {
+      #controls {
+        font-family: system-ui, sans-serif;
+      }
+    }
+
+    #unpip,
+    #minimize,
+    #close {
+      position: relative !important;
+      inset: auto !important;
+      grid-row: 1;
+      display: flex !important;
+      align-items: center;
+      box-sizing: border-box !important;
+      width: auto !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: var(--arczen-pip-row) !important;
+      /* Zone cliquable = fond de survol = marge interne + icône + écart + texte + marge interne. */
+      margin: 0 !important;
+      padding: 0 var(--arczen-pip-pad) 0
+        calc(var(--arczen-pip-pad) - var(--arczen-pip-inset) + var(--arczen-pip-icon) + var(--arczen-pip-gap)) !important;
+      border-radius: var(--arczen-pip-radius) !important;
+      background-color: transparent !important;
+      /* Tracé de l'icône à une marge interne du bord du bouton. */
+      background-position: calc(var(--arczen-pip-pad) - var(--arczen-pip-inset)) center !important;
+      background-size: var(--arczen-pip-icon) !important;
+      font: inherit !important;
+      color: #fff !important;
+      fill: #fff !important;
+      white-space: nowrap;
+    }
+
+    /* Libellés anglais d'Arc. */
+    #unpip::after,
+    #minimize::after,
+    #close::after {
+      display: inline !important;
+      position: static !important;
+      float: none !important;
+      inset: auto !important;
+      width: auto !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      transform: none !important;
+      translate: none !important;
+      scale: none !important;
+      background: none !important;
+      border-radius: 0 !important;
+      color: #fff !important;
+      font: inherit !important;
+      /* Ombre statique légère : texte lisible sur une vidéo claire. */
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.45) !important;
+      pointer-events: none !important;
+    }
+
+    #unpip::after { content: "Back to Tab" !important; }
+    #minimize::after { content: "Minimize" !important; }
+    #close::after { content: "Close" !important; }
+
+    #unpip {
+      grid-column: 1;
+      justify-self: start;
+      background-image: none !important;
+      /* Flèche → texte : 23 px pour 24 px de corps sur la référence. */
+      padding-left: calc(var(--arczen-pip-pad) - var(--arczen-pip-inset) + var(--arczen-pip-icon) + 0.77em) !important;
+    }
+
+    /* Flèche diagonale ↖ d'Arc : la flèche « retour » de Zen tournée de 45° (les images data:
+       sont bloquées par la CSP du lecteur ; la rotation, statique, ne touche que l'icône). */
+    #unpip::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(var(--arczen-pip-pad) - var(--arczen-pip-inset));
+      width: var(--arczen-pip-icon);
+      background: url("chrome://browser/skin/zen-icons/back.svg") center / 100% no-repeat;
+      transform: rotate(45deg) scale(1.2); /* une fois tournée, la flèche paraît plus petite */
+    }
+
+    #minimize {
+      grid-column: 3;
+    }
+
+    #close {
+      grid-column: 4;
+      /* Écart entre les deux boutons (n'appartient à aucun bouton, jamais éclairci) : il porte
+         le trait de séparation. */
+      margin-left: var(--arczen-pip-sep) !important;
+      /* Même trait que le tiret de « réduire » (icônes Zen). */
+      background-image: url("chrome://browser/skin/zen-icons/close.svg") !important;
+    }
+
+    /* Trait de séparation entre « — Minimize » et « ✕ Close » : 1 px de blanc à 35 %, haut de
+       0,9 em, centré dans l'écart (même cellule que « Close », à la moitié de l'écart). Positionné pour passer au-dessus du voile sombre (peint avant lui)
+       et sous les boutons (z-index 1 natif). Plus de pilule permanente : le fond gris n'existe
+       qu'au survol de chaque bouton (plus bas). */
+    #controls::after {
+      content: "";
+      grid-row: 1;
+      grid-column: 4;
+      justify-self: start;
+      align-self: center;
+      position: relative;
+      width: 1px;
+      height: 0.9em;
+      /* la cellule commence au bord de la marge de « Close », donc au début de l'écart */
+      margin: 0 0 0 calc(var(--arczen-pip-sep) / 2 - 0.5px);
+      background: rgba(255, 255, 255, 0.35);
+      pointer-events: none;
+      /* Suit l'apparition native des commandes (survol, révélation). */
+      opacity: 0;
+      transition: opacity 160ms linear;
+    }
+
+    body:not(:fullscreen) #controls:hover::after,
+    #controls:is([showing], [keying], [donthide])::after {
+      opacity: 1;
+    }
+
+    /* Libellés en blanc pur dès que les commandes sont visibles (Arc), au lieu du 0,8 natif des
+       boutons non survolés : le survol se lit au fond, pas à un changement de texte. */
+    body:not(:fullscreen) #controls:hover :is(#unpip, #minimize, #close),
+    #controls[donthide] :is(#unpip, #minimize, #close) {
+      opacity: 1 !important;
+    }
+
+    /* Survol : fond gris de la taille exacte du bouton (hauteur de la rangée, rayon 0,16 ×
+       hauteur), blanc à 19 %, identique pour les trois boutons. Changement instantané (pas
+       d'animation de couleur, hors compositeur). */
+    #unpip:is(:hover, :focus-visible),
+    #minimize:is(:hover, :focus-visible),
+    #close:is(:hover, :focus-visible) {
+      background-color: rgba(255, 255, 255, 0.19) !important;
+    }
+
+    /* Fenêtre étroite : icônes seules, chaque bouton devient un carré de la hauteur de la
+       rangée (icône centrée). Seuils : sous 300 px, l'écart entre « Back to Tab » et
+       « Minimize » passerait sous 1 em (corps plancher 11 px) ; et toute fenêtre verticale
+       (3:4 ou plus étroite, Shorts) : les libellés n'y tiennent pas sans rapetisser. */
+    @media (max-width: 299.98px), (max-aspect-ratio: 3/4) {
+      #unpip::after,
+      #minimize::after,
+      #close::after {
+        content: none !important;
+      }
+
+      #unpip,
+      #minimize,
+      #close {
+        width: var(--arczen-pip-row) !important;
+        padding: 0 !important;
+        background-position: center !important;
+      }
+
+      #unpip::before {
+        left: calc((var(--arczen-pip-row) - var(--arczen-pip-icon)) / 2);
+      }
+
+      :root {
+        --arczen-pip-sep: 0.5em;
+      }
+    }
+
+    /* ---------- Ouverture (arczen.uc.js) ---------- */
+    /* Contenu masqué tant que la fenêtre n'est pas à sa place (posée d'un coup, sans glissement),
+       puis apparition : fondu et léger grossissement (96 % → 100 %) depuis le centre, sur
+       transform et opacity uniquement (compositeur). Easing ease-out prolongé sans rebond
+       (quintique pour l'échelle, cubique pour le fondu, un peu plus court : l'image est pleine
+       avant la fin du grossissement). Durée selon le réglage « arczen.pip-anim » : 320 ms par
+       défaut, 450 ms en « Posée » (exception voulue à la limite de 200 ms, ouverture seulement).
+       body couvre exactement la fenêtre : la transformation, qui en fait le bloc conteneur des
+       commandes en position fixe, ne déplace rien. Rien sous « réduire les animations »
+       (arczen.uc.js ne pose alors pas l'attribut). */
+    :root {
+      --arczen-pip-enter-ms: 320ms;
+    }
+
+    @media -moz-pref("arczen.pip-anim", "450") {
+      :root {
+        --arczen-pip-enter-ms: 450ms;
+      }
+    }
+
+    :root[arczen-pip-hold] body {
+      opacity: 0;
+    }
+
+    :root[arczen-pip-enter] body {
+      animation:
+        arczen-pip-fade calc(var(--arczen-pip-enter-ms) * 0.75) cubic-bezier(0.33, 1, 0.68, 1) backwards,
+        arczen-pip-grow var(--arczen-pip-enter-ms) cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+
+    @keyframes arczen-pip-fade {
+      from { opacity: 0; }
+    }
+
+    @keyframes arczen-pip-grow {
+      from { transform: scale(0.96); }
+    }
+
+    /* ---------- Lancer vers un coin (arczen.uc.js) ---------- */
+    /* Le mod déplace lui-même la fenêtre (vitesse du geste, coins de la carte Zen) : plus de
+       glissement natif sur les zones « drag » de player.css. La propriété s'hérite : les
+       enfants de #controls passent aussi en « no-drag ». Sans l'attribut (réglage
+       « arczen.pip-throw » désactivé, script absent), glissement natif d'origine. */
+    :root[arczen-pip-drag] #controls,
+    :root[arczen-pip-drag] #controls-bottom-gradient {
+      -moz-window-dragging: no-drag !important;
+    }
+  }
+}

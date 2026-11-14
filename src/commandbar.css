@@ -1,0 +1,609 @@
+/* Barre de commande (Ctrl+T) et panneau d'URL (clic sur la pilule), habillés comme dans Arc.
+
+   Deux états de l'urlbar ouverte de Zen ([breakout-extend]) :
+   - barre de commande : barre flottante centrée ouverte par un nouvel onglet ([zen-newtab]),
+     ou toute barre flottante hors du mode « barre unique » ;
+   - panneau d'URL : en mode barre unique, toute autre ouverture (clic sur la pilule, Ctrl+L).
+     Il est ancré sur la pilule comme dans Arc, y compris quand Zen est réglé sur « float »
+     (sinon Zen centrerait aussi le clic sur la pilule).
+
+   Toutes les dimensions suivent --arc-cmd-scale (préférence « Échelle de la barre de commande »),
+   indépendante de l'échelle de la sidebar.
+
+   Seule exception au « pas de flou » du mod : sous le fond de ces deux panneaux, une capture
+   floutée de la page, faite une fois à l'ouverture par arczen.uc.js (surface transitoire, une
+   seule couche, jamais sur les rangées), désactivable par la préférence « arczen.cmd-no-blur ». */
+
+/* ---------- Matière commune ---------- */
+
+/* Jetons de matière propres à ces panneaux (mesurés sur Arc, image 06 et 07) : gris moyen
+   plutôt que presque noir, aucun halo diffus, liseré clair de 1 px et liseré sombre fin. */
+#urlbar[breakout-extend] {
+  --arc-cmd-bg-opaque: light-dark(rgb(244, 244, 245), rgb(49, 49, 49));
+  /* Verre d'Arc (images 11 et 07, mesurées) : sortie ≈ 0,11 × page floutée + 21 en sombre,
+     soit une teinte de 24 à 89 % sur un flou de σ ≈ 22-29 pt saturé ≈ ×1,5 ; aucun grain.
+     Un backdrop-filter sur la barre (top layer) ne voit ni la page web ni la barre latérale :
+     arczen.uc.js glisse sous ce fond une capture réduite, floutée et saturée de la page
+     (.arczen-cmd-glass), précédée d'une plaque blanche : teinte sur blanc ≈ 49 (sombre) /
+     244 (clair), comme la variante opaque. */
+  --arc-cmd-bg: light-dark(rgba(243, 243, 244, 0.9), rgba(24, 24, 24, 0.89));
+  /* Arc (image 11, sur 49) : liseré intérieur ≈ 95, liseré extérieur ≈ 15 sur la page */
+  --arc-cmd-ring-in: light-dark(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.22));
+  --arc-cmd-ring-out: light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.85));
+  /* rangée choisie ≈ 50 sur 49 : à peine visible */
+  --arc-cmd-row-sel: color-mix(in srgb, var(--arc-fg) 0.8%, transparent);
+  /* textes recalés sur ce fond de 49 (les jetons de tokens.css visaient l'ancien fond de 33) :
+     titres ≈ 223, URL ≈ 124, URL de la rangée choisie ≈ 161 */
+  --arc-cmd-title: color-mix(in srgb, var(--arc-fg) 85%, transparent);
+  --arc-cmd-url: color-mix(in srgb, var(--arc-fg) 36%, transparent);
+  --arc-cmd-url-sel: color-mix(in srgb, var(--arc-fg) 54%, transparent);
+}
+
+/* Préférence « Opacité du fond » : ±3 / ±6 points d'alpha sur la teinte du verre (Standard =
+   valeurs ci-dessus, inchangées). Sans effet sur la variante opaque (sans flou ou transparence
+   réduite) : elle est déjà pleine. */
+@media -moz-pref("arczen.cmd-opacity", "-2") {
+  #urlbar[breakout-extend] { --arc-cmd-bg: light-dark(rgba(243, 243, 244, 0.84), rgba(24, 24, 24, 0.83)); }
+}
+@media -moz-pref("arczen.cmd-opacity", "-1") {
+  #urlbar[breakout-extend] { --arc-cmd-bg: light-dark(rgba(243, 243, 244, 0.87), rgba(24, 24, 24, 0.86)); }
+}
+@media -moz-pref("arczen.cmd-opacity", "1") {
+  #urlbar[breakout-extend] { --arc-cmd-bg: light-dark(rgba(243, 243, 244, 0.93), rgba(24, 24, 24, 0.92)); }
+}
+@media -moz-pref("arczen.cmd-opacity", "2") {
+  #urlbar[breakout-extend] { --arc-cmd-bg: light-dark(rgba(243, 243, 244, 0.96), rgba(24, 24, 24, 0.95)); }
+}
+
+/* Préférence « Intensité du flou » : facteur sur le rayon du flou de la capture (arczen.uc.js le
+   lit avec --arc-cmd-scale au moment de la capture ; aucun observateur). Standard = 1. */
+@media -moz-pref("arczen.cmd-blur", "light") { :root { --arczen-cmd-blur: 0.7; } }
+@media -moz-pref("arczen.cmd-blur", "strong") { :root { --arczen-cmd-blur: 1.3; } }
+
+#urlbar[breakout-extend] > .urlbar-background {
+  /* Fond gris opaque par défaut ; la version acrylique n'est posée qu'avec le flou */
+  background-color: var(--arc-cmd-bg-opaque) !important;
+  outline: none !important;
+  border: none !important;
+  /* liseré clair à l'intérieur, liseré sombre fin à l'extérieur, aucune ombre floue :
+     l'ancienne ombre portée formait le halo en dégradé autour de la barre */
+  box-shadow:
+    inset 0 0 0 1px var(--arc-cmd-ring-in),
+    0 0 0 0.5px var(--arc-cmd-ring-out) !important;
+}
+
+@media not -moz-pref("arczen.cmd-no-blur") {
+  @media not (prefers-reduced-transparency: reduce) {
+    #urlbar[breakout-extend] > .urlbar-background {
+      background-color: var(--arc-cmd-bg) !important;
+    }
+    /* Capture de la page sous la surface (arczen.uc.js), sous le fond teinté : plaque blanche
+       immédiate, puis l'image en fondu quand elle arrive ; seulement barre ouverte. */
+    #urlbar[breakout-extend] > .arczen-cmd-glass {
+      display: block !important;
+      position: absolute !important;
+      inset: 0 !important;
+      overflow: clip !important;
+      border-radius: var(--arc-cmd-radius) !important;
+      corner-shape: var(--arc-corner-shape, squircle) !important;
+      pointer-events: none !important;
+    }
+    #urlbar[breakout-extend] > .arczen-cmd-glass > div {
+      position: absolute !important;
+      background: white !important;
+    }
+    /* Partie au-dessus de la barre latérale flottante : sa couleur de fond, opaque (pas de
+       texte net sous la teinte). */
+    #urlbar[breakout-extend] > .arczen-cmd-glass > div.side {
+      background: var(--arczen-cmd-side, transparent) !important;
+    }
+    #urlbar[breakout-extend] > .arczen-cmd-glass > canvas {
+      position: absolute !important;
+      opacity: 0 !important;
+      transition: opacity 100ms linear !important;
+    }
+    #urlbar[breakout-extend] > .arczen-cmd-glass[ready] > canvas {
+      opacity: 1 !important;
+    }
+    /* Tramage (arczen.uc.js) : grain fin entre la capture et la teinte, qui la divise par ≈ 9 ;
+       il casse les paliers du dégradé flouté sans se voir. Avec l'image seulement. */
+    #urlbar[breakout-extend] > .arczen-cmd-glass > div.grain {
+      inset: 0 !important;
+      background: none !important;
+    }
+    #urlbar[breakout-extend] > .arczen-cmd-glass[ready][grain] > div.grain {
+      background: var(--arczen-cmd-grain) 0 0 / var(--arczen-cmd-grain-size) repeat !important;
+      image-rendering: pixelated !important; /* un texel par pixel d'écran, jamais lissé */
+    }
+  }
+}
+
+#urlbar > .arczen-cmd-glass {
+  display: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #urlbar[breakout-extend] > .arczen-cmd-glass > canvas {
+    transition: none !important;
+  }
+}
+
+#urlbar[breakout-extend] {
+  /* Valeurs de la barre de commande ; le panneau d'URL en redéfinit une partie plus bas */
+  /* Arc : coin circulaire de ≈ 10,9 pt ; même retrait visuel avec le profil superellipse(1,4)
+     du mod qu'un rayon de 14 (0,293 × 10,9 ≈ 0,231 × 13,8) */
+  --arc-cmd-radius: calc(14px * var(--arc-cmd-scale));
+  --arc-row-height: calc(43.5px * var(--arc-cmd-scale)); /* surlignage ; le pas ajoute la bordure transparente */
+  --arc-row-border: calc(2px * var(--arc-cmd-scale));    /* bordure transparente haut/bas de Zen (2 px à 100 %) */
+  --arc-row-radius: calc(9px * var(--arc-cmd-scale));
+  --arc-row-bg: var(--arc-cmd-row-sel);
+  --arc-row-font: calc(13px * var(--arc-cmd-scale) * var(--arc-cmd-text));     /* Arc : hauteur d'x de 6,4 pt, soit ≈ 12,5-13 pt */
+  --arc-row-title: var(--arc-cmd-title);
+  --arc-chip: calc(23px * var(--arc-cmd-scale));          /* pastille blanche sous le favicon choisi */
+  --arc-fav: calc(14px * var(--arc-cmd-scale));           /* favicon nu */
+  --arc-fav-gap: calc(9px * var(--arc-cmd-scale));        /* favicon → titre : titre à 50,5 pt du bord */
+  /* Typographie calée sur l'encre d'Arc (réf. 11, mêmes chaînes rendues à 2 px/pt) : surface
+     d'encre et hauteur d'x égales plutôt que graisse nominale, car CoreText épaissit le trait
+     (Arc « paraît » 600) là où DirectWrite le rend tel quel. Interlettrage : table « trak » de
+     macOS, qui dépend du corps (13 pt ≈ -0,027 em ici, 12,5 pt -0,02, 17,5 pt -0,022).
+     Le toolbox pose 0,026 em pour la coupe Display de la sidebar : on le remplace ici. */
+  --arc-tracking: -0.027em;
+  --arc-label-font: calc(12.5px * var(--arc-cmd-scale) * var(--arc-cmd-text)); /* « Switch to Tab », « Search … », « Tab » */
+
+  --urlbarview-separator-color: var(--arc-cmd-line) !important;
+
+  &,
+  & > .urlbar-background {
+    border-radius: var(--arc-cmd-radius) !important;
+    corner-shape: var(--arc-corner-shape, squircle) !important;
+  }
+
+  /* Icône du champ : favicon de la rangée choisie (ou de la page), fourni par arczen.uc.js.
+     Sans lui, Firefox affiche la loupe dès que pageproxystate vaut « invalid », c'est-à-dire
+     dès l'ouverture du panneau. La variable n'existe que lorsqu'un favicon est connu. */
+  &[arczen-field-icon] #identity-icon {
+    list-style-image: var(--arczen-field-icon) !important;
+    fill: currentColor !important;
+    -moz-context-properties: fill !important;
+  }
+  /* Sans favicon connu (nouvel onglet, page sans icône, suggestion de recherche) : pas de
+     loupe, à la demande de l'utilisateur. La place reste réservée pour que le texte ne saute
+     pas quand un favicon apparaît pendant la frappe. */
+  &:not([arczen-field-icon]) #identity-icon {
+    visibility: hidden !important;
+  }
+
+  & .urlbar-input-container {
+    padding-inline: calc(14px * var(--arc-cmd-scale)) !important;
+  }
+  /* Arc : texte saisi à 50 pt du bord (Zen laisse 6,2 px après l'icône, soit 54) */
+  & .urlbar-input-box {
+    margin-inline-start: calc(1.5px * var(--arc-cmd-scale)) !important;
+  }
+
+  & #urlbar-input::selection {
+    background-color: var(--arc-cmd-selection) !important;
+    color: var(--arc-fg) !important;
+  }
+
+  /* Arc n'affiche pas la puce « Switch to tab: » dans le champ : la rangée le dit déjà.
+     On masque toute la boîte d'étiquettes (sinon ses 2 × 8 px de rembourrage laissent un
+     retrait fantôme) ; l'étiquette d'extension, elle, vient avec actiontype="extension". */
+  &[actiontype="switchtab"] #urlbar-label-box {
+    display: none !important;
+  }
+
+  /* ---------- Rangées ---------- */
+
+  & .urlbarView-row {
+    min-height: var(--arc-row-height) !important;
+    border-block-width: var(--arc-row-border) !important;
+    border-radius: var(--arc-row-radius) !important;
+    /* le surlignage s'arrête à la bordure transparente : pas de 47,5 pour 43,5 de surlignage */
+    background-clip: padding-box !important;
+    color: var(--arc-row-title) !important;
+
+    /* contenu = pastille du favicon ; le rembourrage complète jusqu'à la hauteur visée */
+    & > .urlbarView-row-inner {
+      padding-block: calc((var(--arc-row-height) - var(--arc-chip)) / 2) !important;
+      padding-inline: calc(8px * var(--arc-cmd-scale)) !important;
+      min-height: 0 !important;
+    }
+
+    &:hover,
+    &:hover .urlbarView-favicon {
+      background-color: transparent !important;
+    }
+    &:hover {
+      background-color: var(--arc-cmd-row-hover) !important;
+    }
+
+    &[selected] {
+      background-color: var(--arc-row-bg) !important;
+    }
+  }
+
+  & .urlbarView-favicon {
+    width: var(--arc-fav) !important;
+    height: var(--arc-fav) !important;
+    padding: calc((var(--arc-chip) - var(--arc-fav)) / 2) !important;
+    margin-right: var(--arc-fav-gap) !important;
+    border-radius: calc(5px * var(--arc-cmd-scale)) !important;
+    background-color: transparent !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+  }
+
+  & .urlbarView-title {
+    font-size: var(--arc-row-font) !important;
+    font-weight: 520 !important;
+    letter-spacing: var(--arc-tracking) !important;
+    color: var(--arc-row-title) !important;
+  }
+
+  & .urlbarView-url,
+  & .urlbarView-title-separator::before,
+  & .urlbarView-action {
+    font-size: var(--arc-row-font) !important;
+    font-weight: 500 !important;
+    letter-spacing: var(--arc-tracking) !important;
+    color: var(--arc-cmd-url) !important;
+  }
+
+  /* Rangée choisie : Zen la peint à l'accent et passe tout en blanc ; Arc garde le fond
+     presque intact et ne marque que le favicon (pastille blanche) et le texte. */
+  & .urlbarView-row[selected] {
+    & .urlbarView-row-inner,
+    & .urlbarView-no-wrap,
+    & .urlbarView-title,
+    & .urlbarView-action {
+      color: var(--arc-fg) !important;
+    }
+
+    & .urlbarView-url,
+    & .urlbarView-title-separator::before {
+      color: var(--arc-cmd-url-sel) !important;
+    }
+
+    & .urlbarView-favicon {
+      background-color: var(--arc-cmd-chip) !important;
+      box-shadow: 0 0 0 0.5px var(--arc-cmd-chip-ring) !important;
+      fill: var(--arc-cmd-chip-fg) !important;
+      stroke: var(--arc-cmd-chip-fg) !important;
+    }
+  }
+
+  /* Bouton « … » de Firefox : Arc n'en a pas. Il garde sa place (aucun saut de mise en page)
+     mais reste transparent hors survol de la rangée ; la sélection seule ne l'affiche pas.
+     Au clavier (Tab), Firefox sélectionne le bouton lui-même : il redevient alors visible. */
+  & .urlbarView-button-result-menu {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 0 !important;
+    transition: opacity var(--arc-dur) var(--arc-ease) !important;
+  }
+  & .urlbarView-row:hover .urlbarView-button-result-menu,
+  & .urlbarView-button-result-menu:is([selected], [open], :focus-visible) {
+    opacity: 1 !important;
+  }
+
+  /* « Switch to Tab » + bouton flèche carré arrondi (remplace la flèche évidée de Zen) */
+  /* Les feuilles de Zen sont de l'origine auteur : sans !important, elles gagnent. */
+  & .urlbarView-row:is([type="switchtab"], [type="remotetab"]) .urlbarView-action:last-child {
+    --arc-btn: calc(22px * var(--arc-cmd-scale));
+    --arc-btn-room: calc(33px * var(--arc-cmd-scale));
+    scale: none !important;
+    opacity: 1 !important;
+    font-size: var(--arc-label-font) !important;
+    font-weight: 540 !important;
+    letter-spacing: -0.02em !important;
+    padding-block: 0 !important; /* sinon la rangée « Switch to Tab » gagne 1,5 px */
+    margin-right: var(--arc-btn-room) !important;
+
+    &::before,
+    &::after {
+      content: "" !important;
+      position: absolute !important;
+      top: 50% !important;
+      right: calc(-1 * var(--arc-btn-room)) !important;
+      width: var(--arc-btn) !important;
+      height: var(--arc-btn) !important;
+      translate: 0 -50% !important;
+      pointer-events: none !important;
+    }
+
+    &::before {
+      border-radius: calc(5px * var(--arc-cmd-scale)) !important;
+      background-color: var(--arc-cmd-btn) !important;
+    }
+
+    /* flèche : petit glyphe SVG en data:, utilisé comme masque pour suivre la couleur */
+    &::after {
+      background-color: var(--arc-cmd-btn-fg) !important;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8h7.5M8.5 4.5 12 8l-3.5 3.5' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+      mask-size: calc(14px * var(--arc-cmd-scale)) !important;
+      mask-position: center !important;
+      mask-repeat: no-repeat !important;
+    }
+  }
+
+  & .urlbarView-row:is([type="switchtab"], [type="remotetab"])[selected] .urlbarView-action:last-child {
+    &::before {
+      background-color: var(--arc-cmd-chip) !important;
+      box-shadow: 0 0 0 0.5px var(--arc-cmd-chip-ring) !important;
+    }
+    &::after {
+      background-color: var(--arc-cmd-chip-fg) !important;
+    }
+  }
+
+  /* Recherche sur le site, comme Arc : « Search YouTube » puis la touche Tab dessinée, à droite
+     de la rangée d'autoremplissage d'un domaine qui a un moteur installé. Le texte et l'attribut
+     viennent d'arczen.uc.js ; Tab y passe en mode recherche natif de Firefox.
+     Arc : texte du corps de « Switch to Tab » (même hauteur d'encre, 188 px pour « Search
+     YouTube »), touche de 28,7 × 22,3 pt, 8,6 pt d'écart, 21 pt du bord droit. */
+  & .urlbarView-row[arczen-site-search] > .urlbarView-row-inner {
+    &::before,
+    &::after {
+      flex: none !important;
+      align-self: center !important;
+      white-space: nowrap !important;
+      font-size: var(--arc-label-font) !important;
+      font-weight: 540 !important;
+      letter-spacing: -0.02em !important;
+    }
+    &::before {
+      content: var(--arczen-site-search) !important;
+      order: 1 !important;
+      margin-inline-start: auto !important;
+      padding-inline-start: calc(12px * var(--arc-cmd-scale)) !important;
+      color: var(--arc-cmd-url) !important;
+    }
+    &::after {
+      content: "Tab" !important;
+      order: 2 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+      min-width: calc(28.7px * var(--arc-cmd-scale)) !important;
+      height: calc(22.3px * var(--arc-cmd-scale)) !important;
+      padding-inline: calc(4px * var(--arc-cmd-scale)) !important;
+      margin-inline: calc(8.6px * var(--arc-cmd-scale)) calc(2.5px * var(--arc-cmd-scale)) !important;
+      border-radius: calc(5px * var(--arc-cmd-scale)) !important;
+      background-color: var(--arc-cmd-btn) !important;
+      color: color-mix(in srgb, var(--arc-fg) 74%, transparent) !important;
+    }
+  }
+}
+
+/* ---------- Barre de commande (Ctrl+T) ---------- */
+
+#urlbar[breakout-extend][zen-floating-urlbar="true"][zen-newtab],
+:root:not([zen-single-toolbar="true"]) #urlbar[breakout-extend][zen-floating-urlbar="true"] {
+  /* champ de 60 pt, texte 17 pt, filet en retrait de 11 pt */
+  --urlbar-container-height: calc(60px * var(--arc-cmd-scale)) !important;
+  /* Arc : 726 pt de large ; Zen calcule min(fenêtre / 1,5 ; 750 px) et le pose en ligne.
+     On ne fait que plafonner sa variable : centrage et hauteur restent ceux de Zen.
+     Le min-width (90 % de la fenêtre au plus) garde la barre contenue en fenêtre étroite. */
+  --zen-urlbar-width: min(726px * var(--arc-cmd-scale), 100vw / 1.5) !important;
+  min-width: min(90%, 726px * var(--arc-cmd-scale)) !important; /* Zen impose min(90 %, 62rem) */
+
+  /* icône du champ mise à l'échelle avec la barre : Arc la centre à 30,3 pt du bord (16 pt),
+     texte à 50 pt ; Zen donne 2 + 6 px avant l'icône et 6 + 4 px après, en px fixes */
+  & #identity-icon-box {
+    margin-inline: calc(2px * var(--arc-cmd-scale)) calc(4px * var(--arc-cmd-scale)) !important;
+    padding-inline: calc(6px * var(--arc-cmd-scale)) !important;
+  }
+  & #identity-icon {
+    width: calc(16px * var(--arc-cmd-scale)) !important;
+    height: calc(16px * var(--arc-cmd-scale)) !important;
+  }
+
+  /* largeur recalculée : celle de Firefox retranche des marges fixes (décalage à droite à 125 %) */
+  & .urlbarView {
+    margin-inline: calc(12px * var(--arc-cmd-scale)) !important;
+    width: calc(100% - 24px * var(--arc-cmd-scale)) !important;
+  }
+  /* Arc : centre de la 1re rangée à 27,7 pt du filet, dernière à 32,7 pt du bas */
+  & #urlbar-results {
+    padding-block-start: calc(3px * var(--arc-cmd-scale)) !important;
+    margin-block-end: calc(9px * var(--arc-cmd-scale)) !important;
+    max-height: calc(244px * var(--arc-cmd-scale)) !important; /* plafond de Zen, mis à l'échelle */
+  }
+
+  /* Arc : hauteur d'x de 19 px à 2 px/pt (17,5 pt ici), encre de « youtu » égale à 520,
+     « youtube.com » de 101 pt de long (trak de -0,43 pt à 17 pt chez Apple ≈ -0,022 em) */
+  & #urlbar-input {
+    font-size: calc(17.5px * var(--arc-cmd-scale) * var(--arc-cmd-text)) !important;
+    font-weight: 520 !important;
+    letter-spacing: -0.022em !important;
+
+    /* l'invite garde son calage d'origine (réf. 10) */
+    &::placeholder {
+      color: var(--arc-cmd-placeholder) !important;
+      font-size: calc(17px * var(--arc-cmd-scale) * var(--arc-cmd-text)) !important;
+      font-weight: 600 !important;
+      letter-spacing: normal !important;
+      opacity: 1 !important;
+    }
+  }
+}
+
+/* ---------- Panneau d'URL ancré sur la pilule ---------- */
+
+:root[zen-single-toolbar="true"] {
+  & #urlbar-container {
+    anchor-name: --arczen-pill;
+  }
+
+  & #urlbar[breakout-extend]:not([zen-newtab]) {
+    /* même arrondi que la barre de commande ; rangée de la page courante surlignée
+       (fournie par arczen.uc.js), pastille blanche de 20 pt comme Arc */
+    --arc-row-height: calc(40px * var(--arc-cmd-scale)); /* pas de 44 avec la bordure de 2 + 2 */
+    --arc-row-radius: calc(10px * var(--arc-cmd-scale));
+    --arc-row-bg: var(--arc-panel-row-sel);
+    /* Arc (réf. 07) : « (2) YouTube » 64 pt, « Contact the Team » 95 pt, URL du champ 351 pt,
+       soit du 12 pt avec le même interlettrage que la barre (13 pt mesurait 8 à 10 % trop long) */
+    --arc-row-font: calc(12px * var(--arc-cmd-scale) * var(--arc-cmd-text));
+    --arc-label-font: calc(11.5px * var(--arc-cmd-scale) * var(--arc-cmd-text)); /* même rapport à la rangée que la barre */
+    --arc-row-title: var(--arc-panel-title);
+    --arc-chip: calc(20px * var(--arc-cmd-scale));
+    --arc-fav: calc(13px * var(--arc-cmd-scale));
+    --arc-fav-gap: calc(8px * var(--arc-cmd-scale));
+    --urlbar-container-height: calc(44px * var(--arc-cmd-scale)) !important;
+
+    /* même bord gauche que la pilule, 2 pt au-dessus, 406 pt de large (déborde sur la page) */
+    top: calc(anchor(--arczen-pill top) - 2px * var(--arc-cmd-scale)) !important;
+    left: anchor(--arczen-pill left) !important;
+    translate: none !important;
+    width: min(406px * var(--arc-cmd-scale), 100vw - 16px) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    font-size: calc(13px * var(--arc-cmd-scale) * var(--arc-cmd-text)) !important;
+
+    & #urlbar-input {
+      font-size: var(--arc-row-font) !important;
+      font-weight: 520 !important;
+      letter-spacing: var(--arc-tracking) !important;
+    }
+
+    /* Icône du champ alignée sur les favicons des rangées, comme Arc : 16 pt centrés à 27 pt
+       du bord, texte à 45 pt (10 pt après l'icône). Zen pose 2 + 6 px avant l'icône et
+       6 + 4 px après, en px fixes : l'écart variait avec l'échelle (49,5 pt à 100 %). */
+    & #identity-icon-box {
+      margin-inline: 0 calc(3.5px * var(--arc-cmd-scale)) !important;
+      padding-inline: calc(5px * var(--arc-cmd-scale)) !important;
+    }
+    & #identity-icon {
+      width: calc(16px * var(--arc-cmd-scale)) !important;
+      height: calc(16px * var(--arc-cmd-scale)) !important;
+    }
+
+    /* Rangée de la page courante (heuristique, sans saisie) : Arc n'affiche que le titre */
+    &:not([usertyping]) .urlbarView-row:first-child[selected]:not([type="switchtab"]) :is(.urlbarView-action, .urlbarView-title-separator, .urlbarView-url) {
+      display: none !important;
+    }
+
+    /* surlignage en retrait de 7,8 pt, texte à 44,5 pt du bord, cinq rangées de 44 pt
+       puis 7,5 pt de marge basse : 44 + 5 × 44 + 7,5 ≈ 270 pt comme Arc */
+    & .urlbarView {
+      margin-inline: calc(9.3px * var(--arc-cmd-scale)) !important;
+    }
+    & #urlbar-results {
+      padding-block-start: 0 !important;
+      margin-block-end: calc(7.5px * var(--arc-cmd-scale)) !important;
+      max-height: calc(5 * (var(--arc-row-height) + 2 * var(--arc-row-border))) !important;
+    }
+  }
+
+  /* Sidebar à droite : même logique, alignée sur le bord droit de la pilule */
+  &[zen-right-side="true"] #urlbar[breakout-extend]:not([zen-newtab]) {
+    left: auto !important;
+    right: anchor(--arczen-pill right) !important;
+  }
+}
+
+/* ---------- Ouverture ---------- */
+
+/* Zen n'anime pas l'ouverture de l'urlbar (aucune animation relevée par getAnimations()),
+   d'où une seule animation courte : opacité + léger glissement, transform/opacity seulement. */
+@media (prefers-reduced-motion: no-preference) {
+  #urlbar[breakout-extend] {
+    transform-origin: 50% 0 !important;
+    animation: arczen-cmd-in 150ms var(--arc-ease) both !important;
+  }
+
+  :root[zen-single-toolbar="true"] #urlbar[breakout-extend]:not([zen-newtab]) {
+    transform-origin: 0 0 !important;
+  }
+}
+
+@keyframes arczen-cmd-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-4px * var(--arc-cmd-scale))) scale(0.985);
+  }
+}
+
+/* ---------- Actions de la barre de commande ---------- */
+
+/* Rangées d'action : celles d'ArcZen (arczen.uc.js) et celles de la palette de Zen, toutes du
+   type dynamique « zen-actions ». Arc : pictogramme monochrome dans la même pastille que les
+   favicons, libellé écrit comme les autres titres, raccourci dans une touche dessinée à droite.
+   Zen donne à ces rangées un titre gras et une puce de raccourci de 24 px en petites capitales,
+   d'où un pas de 48,5 au lieu de 47,5 : la touche reprend celle de « Tab » (22,3 px). */
+#urlbar[breakout-extend] .urlbarView-row[dynamicType="zen-actions"] {
+  & .urlbarView-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  & .urlbarView-title strong {
+    font-weight: inherit !important;
+  }
+
+  & .urlbarView-shortcutContent {
+    display: flex !important;
+    flex: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    min-width: calc(28.7px * var(--arc-cmd-scale)) !important;
+    /* jamais plus haute que la pastille du favicon, qui fixe la hauteur de la rangée (23 ou 20) */
+    height: min(calc(22.3px * var(--arc-cmd-scale)), var(--arc-chip)) !important;
+    padding-block: 0 !important;
+    padding-inline: calc(6px * var(--arc-cmd-scale)) !important;
+    margin-block: 0 !important;
+    margin-inline: calc(8.6px * var(--arc-cmd-scale)) calc(2.5px * var(--arc-cmd-scale)) !important;
+    border: none !important;
+    border-radius: calc(5px * var(--arc-cmd-scale)) !important;
+    background-color: var(--arc-cmd-btn) !important;
+    font-size: calc(12px * var(--arc-cmd-scale) * var(--arc-cmd-text)) !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+    color: color-mix(in srgb, var(--arc-fg) 74%, transparent) !important;
+    opacity: 1 !important;
+  }
+  & .urlbarView-shortcutContent:empty {
+    display: none !important;
+  }
+
+  /* pastille (urlbarView-favicon, réglée plus haut) centrée sur un pictogramme en masque */
+  & .arczen-action-icon {
+    display: flex !important;
+    flex: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: content-box !important;
+  }
+  & .arczen-action-glyph {
+    flex: none !important;
+    width: var(--arc-fav) !important;
+    height: var(--arc-fav) !important;
+    background-color: currentColor !important;
+    mask: var(--arczen-glyph, none) center / 100% 100% no-repeat !important;
+  }
+  &[selected] .arczen-action-icon {
+    color: var(--arc-cmd-chip-fg) !important;
+  }
+}
+
+/* Pictogrammes : boîte de 16, trait de 1,3 comme ceux du menu du site (sitemenu.css) */
+#urlbar[breakout-extend] .arczen-action-icon {
+  &[arczen-action="copy"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.67 8.67A3.33 3.33 0 0 0 11.7 9.03L13.7 7.03A3.33 3.33 0 0 0 8.99 2.32L7.84 3.46M9.33 7.33A3.33 3.33 0 0 0 4.3 6.97L2.3 8.97A3.33 3.33 0 0 0 7.01 13.68L8.15 12.54'/%3E%3C/svg%3E"); }
+  &[arczen-action="pin"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.6 1.9L14.1 6.4M10.7 3L8.3 6.4L5.3 6.9L9.1 10.7L9.6 7.7L13 5.3M7.2 8.8L2.5 13.5'/%3E%3C/svg%3E"); }
+  &[arczen-action="unpin"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.6 1.9L14.1 6.4M10.7 3L8.3 6.4L5.3 6.9L9.1 10.7L9.6 7.7L13 5.3M7.2 8.8L2.5 13.5M2.2 2.2L13.8 13.8'/%3E%3C/svg%3E"); }
+  &[arczen-action="duplicate"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5.5' y='5.5' width='8.5' height='8.5' rx='1.6'/%3E%3Cpath d='M10.5 3.5V3.4C10.5 2.6 9.9 2 9.1 2H3.4C2.6 2 2 2.6 2 3.4V9.1C2 9.9 2.6 10.5 3.4 10.5H3.5'/%3E%3C/svg%3E"); }
+  &[arczen-action="reader"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 4.4C6.9 3.5 5.2 3 3.1 3H2.4V12.4H3.1C5.2 12.4 6.9 12.9 8 13.8C9.1 12.9 10.8 12.4 12.9 12.4H13.6V3H12.9C10.8 3 9.1 3.5 8 4.4ZM8 4.4V13.6'/%3E%3C/svg%3E"); }
+  &[arczen-action="pip"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='3' width='12' height='10' rx='1.6'/%3E%3Crect x='8.3' y='7.9' width='4' height='3.2' rx='.7' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+  &[arczen-action="sound"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 6.1H4.8L8 3.4V12.6L4.8 9.9H2.6C2.3 9.9 2 9.6 2 9.3V6.7C2 6.4 2.3 6.1 2.6 6.1ZM10.6 5.8A3.2 3.2 0 0 1 10.6 10.2M12.4 4A5.8 5.8 0 0 1 12.4 12'/%3E%3C/svg%3E"); }
+  &[arczen-action="muted"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 6.1H4.8L8 3.4V12.6L4.8 9.9H2.6C2.3 9.9 2 9.6 2 9.3V6.7C2 6.4 2.3 6.1 2.6 6.1ZM10.8 6.2L14.2 9.6M14.2 6.2L10.8 9.6'/%3E%3C/svg%3E"); }
+  &[arczen-action="split"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='3' width='12' height='10' rx='1.6'/%3E%3Cpath d='M8 3V13'/%3E%3C/svg%3E"); }
+  &[arczen-action="screenshot"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.6C2 4.8 2.6 4.2 3.4 4.2H4.9L5.9 2.7C6.1 2.4 6.4 2.3 6.7 2.3H9.3C9.6 2.3 9.9 2.4 10.1 2.7L11.1 4.2H12.6C13.4 4.2 14 4.8 14 5.6V12C14 12.8 13.4 13.4 12.6 13.4H3.4C2.6 13.4 2 12.8 2 12Z'/%3E%3Ccircle cx='8' cy='8.6' r='2.5'/%3E%3C/svg%3E"); }
+  &[arczen-action="downloads"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2V10M4.8 6.9L8 10.1L11.2 6.9M2.5 11V12.3C2.5 13.2 3.2 13.9 4.1 13.9H11.9C12.8 13.9 13.5 13.2 13.5 12.3V11'/%3E%3C/svg%3E"); }
+  &[arczen-action="library"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 2.6H5.2V13.4H2.6ZM6.8 2.6H9.4V13.4H6.8ZM10.4 3.4L12.6 2.8L14.6 12.9L12.4 13.5Z'/%3E%3C/svg%3E"); }
+  &[arczen-action="private"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.9 6.6C1.9 5.2 3.5 4.5 5.4 4.5C6.6 4.5 7.3 5 8 5C8.7 5 9.4 4.5 10.6 4.5C12.5 4.5 14.1 5.2 14.1 6.6C14.1 9.5 12.7 11.6 10.6 11.6C9.2 11.6 8.8 10.4 8 10.4C7.2 10.4 6.8 11.6 5.4 11.6C3.3 11.6 1.9 9.5 1.9 6.6Z'/%3E%3Cellipse cx='5.4' cy='7.7' rx='1.3' ry='1' fill='black' stroke='none'/%3E%3Cellipse cx='10.6' cy='7.7' rx='1.3' ry='1' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+  &[arczen-action="settings"] { --arczen-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5H4.3M7.7 4.5H13.5M2.5 11.5H8.3M11.7 11.5H13.5'/%3E%3Ccircle cx='6' cy='4.5' r='1.7'/%3E%3Ccircle cx='10' cy='11.5' r='1.7'/%3E%3C/svg%3E"); }
+}

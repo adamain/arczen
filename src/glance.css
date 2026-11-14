@@ -1,0 +1,87 @@
+/* Little Glance : l'aperçu de Zen (Glance) comme le Peek d'Arc, une carte centrée sur la page,
+   avec la colonne de boutons ronds noirs juste à côté, du côté opposé à la barre latérale, et
+   les coins de l'application (rayon et forme du panneau de la barre latérale compacte,
+   tokens.css).
+   Cotes relevées sur la référence d'Arc (capture de 1600 px de large, barre latérale masquée) :
+   carte de la page 1560 × 958, Peek 1280 × 973, soit 82 % de la largeur de la carte (9 % de
+   marge de chaque côté) et toute sa hauteur ; boutons à 14 px du bord, le premier 7 px sous le
+   haut du Peek. On reprend ces fractions, quel que soit le format de l'écran, avec un écart
+   vertical de 3 % en plus (demande : pas collé au bord supérieur).
+   Zen anime le conteneur (.browserContainer) par transform et taille en ligne, jusqu'à 80 % ×
+   100 % de la carte, centré : on n'y touche pas, pour garder son animation intacte. Il devient
+   seulement conteneur de taille (container-type) : ses enfants se mesurent en cqw/cqh (la carte
+   de la page = 125cqw × 100cqh), sans script.
+   - Largeur : 82 % de la carte (102,5cqw), réduite s'il faut pour laisser la place des boutons.
+   - Hauteur : 94 % de la carte (3 % d'écart en haut et en bas).
+   La carte visible (.browserStack, avec son ombre et son rayon) est centrée dans le conteneur
+   par ses marges (négatives en largeur : elle dépasse du conteneur) ; l'aperçu du lien et la
+   colonne de boutons suivent la même géométrie. Le reste ne capte pas les clics : un clic à
+   côté de la carte ferme le Glance, comme avant.
+   Limité au Glance superposé (.zen-glance-overlay) ; le Glance détaché n'est pas touché. */
+
+.browserSidebarContainer.zen-glance-overlay {
+  /* écart minimal aux bords de la carte de la page (boutons compris) */
+  --arczen-glance-gap: calc(8px * var(--arc-scale));
+  /* largeur de la colonne de boutons (Zen : 12 px de marge intérieure de part et d'autre) */
+  --arczen-glance-bar: calc(var(--size-item-large, 32px) + 24px);
+  --arczen-glance-radius: var(--arc-radius-panel);
+  /* Taille de la carte du Glance, évaluée chez les enfants de .browserContainer (cqw/cqh). */
+  --arczen-glance-w: min(102.5cqw, calc(125cqw - 2 * (var(--arczen-glance-bar) + var(--arczen-glance-gap))));
+  --arczen-glance-h: 94cqh;
+
+  & .browserContainer {
+    container-type: size;
+    pointer-events: none !important;
+    overflow: visible !important;
+  }
+
+  & .browserContainer > .browserStack {
+    pointer-events: auto !important;
+    flex: none !important;
+    box-sizing: border-box !important;
+    width: var(--arczen-glance-w) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: var(--arczen-glance-h) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: calc((100cqh - var(--arczen-glance-h)) / 2) 0 0 calc((100cqw - var(--arczen-glance-w)) / 2) !important;
+    border-radius: var(--arczen-glance-radius) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+  }
+
+  & .browserContainer > .zen-glance-element-preview {
+    width: var(--arczen-glance-w) !important;
+    height: var(--arczen-glance-h) !important;
+    left: 50% !important;
+    top: 50% !important;
+    border-radius: var(--arczen-glance-radius) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+  }
+
+  /* Colonne de boutons : contre le bord de la carte du Glance, premier bouton un peu sous son
+     haut comme sur Arc (Zen : 12 px de marge intérieure au-dessus du premier bouton) */
+  & .zen-glance-sidebar-container {
+    pointer-events: auto !important;
+    top: calc((100cqh - var(--arczen-glance-h)) / 2 - 12px + 6px * var(--arc-scale)) !important;
+    :root:not([zen-right-side="true"]) & {
+      right: auto !important;
+      left: calc((100cqw + var(--arczen-glance-w)) / 2) !important;
+    }
+    :root[zen-right-side="true"] & {
+      left: auto !important;
+      right: calc((100cqw + var(--arczen-glance-w)) / 2) !important;
+    }
+
+    /* Boutons ronds noirs à icône blanche, comme Arc (la confirmation rouge de Zen reste) */
+    & toolbarbutton:not([waitconfirmation]) {
+      background: rgb(22, 22, 22) !important;
+      color: #fff !important;
+      fill: #fff !important;
+      box-shadow:
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.14),
+        0 calc(2px * var(--arc-scale)) calc(8px * var(--arc-scale)) rgba(0, 0, 0, 0.28) !important;
+      &:hover { background: rgb(44, 44, 44) !important; }
+    }
+  }
+}

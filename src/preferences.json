@@ -1,0 +1,401 @@
+[
+  { "type": "text", "label": "**ArcZen**", "margin": "10px 0 4px 0", "size": "22px" },
+
+  { "type": "text", "label": "**🎨 Apparence**", "margin": "28px 0 6px 0", "size": "19px" },
+
+  { "type": "separator", "label": "📏 Échelles", "margin": "8px 0 4px 0" },
+  {
+    "type": "dropdown",
+    "property": "arczen.scale",
+    "label": "Barre latérale (texte, onglets, icônes)",
+    "defaultValue": "100",
+    "placeholder": false,
+    "options": [
+      { "label": "80 %", "value": "80" },
+      { "label": "85 %", "value": "85" },
+      { "label": "90 %", "value": "90" },
+      { "label": "95 %", "value": "95" },
+      { "label": "100 % (Arc)", "value": "100" },
+      { "label": "105 %", "value": "105" },
+      { "label": "110 %", "value": "110" },
+      { "label": "115 %", "value": "115" },
+      { "label": "120 %", "value": "120" },
+      { "label": "125 %", "value": "125" },
+      { "label": "130 %", "value": "130" },
+      { "label": "140 %", "value": "140" },
+      { "label": "150 %", "value": "150" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.cmd-scale",
+    "label": "Barre de commande",
+    "defaultValue": "100",
+    "placeholder": false,
+    "options": [
+      { "label": "80 %", "value": "80" },
+      { "label": "85 %", "value": "85" },
+      { "label": "90 %", "value": "90" },
+      { "label": "95 %", "value": "95" },
+      { "label": "100 % (Arc)", "value": "100" },
+      { "label": "105 %", "value": "105" },
+      { "label": "110 %", "value": "110" },
+      { "label": "115 %", "value": "115" },
+      { "label": "120 %", "value": "120" },
+      { "label": "125 %", "value": "125" },
+      { "label": "130 %", "value": "130" },
+      { "label": "140 %", "value": "140" },
+      { "label": "150 %", "value": "150" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.cmd-text",
+    "label": "Texte de la barre de commande (taille de la barre inchangée)",
+    "defaultValue": "100",
+    "placeholder": false,
+    "options": [
+      { "label": "85 %", "value": "85" },
+      { "label": "90 %", "value": "90" },
+      { "label": "95 %", "value": "95" },
+      { "label": "100 % (Arc)", "value": "100" },
+      { "label": "105 %", "value": "105" },
+      { "label": "110 %", "value": "110" },
+      { "label": "115 %", "value": "115" },
+      { "label": "120 %", "value": "120" },
+      { "label": "125 %", "value": "125" },
+      { "label": "130 %", "value": "130" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.menu-scale",
+    "label": "Menu du site",
+    "defaultValue": "100",
+    "placeholder": false,
+    "options": [
+      { "label": "80 %", "value": "80" },
+      { "label": "85 %", "value": "85" },
+      { "label": "90 %", "value": "90" },
+      { "label": "95 %", "value": "95" },
+      { "label": "100 % (Arc)", "value": "100" },
+      { "label": "105 %", "value": "105" },
+      { "label": "110 %", "value": "110" },
+      { "label": "115 %", "value": "115" },
+      { "label": "120 %", "value": "120" },
+      { "label": "125 %", "value": "125" },
+      { "label": "130 %", "value": "130" },
+      { "label": "140 %", "value": "140" },
+      { "label": "150 %", "value": "150" }
+    ]
+  },
+
+  { "type": "separator", "label": "🪟 Fenêtre", "margin": "12px 0 4px 0" },
+  {
+    "type": "dropdown",
+    "property": "arczen.border-size",
+    "label": "Épaisseur des bords autour de la page",
+    "defaultValue": "100",
+    "placeholder": false,
+    "options": [
+      { "label": "0 % (aucun bord)", "value": "0" },
+      { "label": "25 %", "value": "25" },
+      { "label": "50 %", "value": "50" },
+      { "label": "75 %", "value": "75" },
+      { "label": "100 % (Zen, 8 px)", "value": "100" },
+      { "label": "125 %", "value": "125" },
+      { "label": "150 %", "value": "150" },
+      { "label": "175 %", "value": "175" },
+      { "label": "200 % (16 px)", "value": "200" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.panel-material",
+    "label": "Matière des panneaux (redémarrage requis)",
+    "defaultValue": "auto",
+    "placeholder": false,
+    "restart": true,
+    "options": [
+      { "label": "Réglage de Zen (acrylique de Windows 11 par défaut)", "value": "auto" },
+      { "label": "Acrylique Windows : vrai flou, coins et bordure de Windows, sans flèche", "value": "acrylic" },
+      { "label": "Rendu Arc : flèche, grands coins, liseré et ombre, fond opaque sans flou", "value": "arc" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.native-window-controls",
+    "label": "Boutons de fenêtre de Windows (au lieu des feux façon macOS)",
+    "defaultValue": false
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.native-menu-button",
+    "label": "Bouton « ··· » de Zen (au lieu du bouton de barre latérale d'Arc)",
+    "defaultValue": false
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.system-font",
+    "label": "Police système de Windows (au lieu de SF Pro)",
+    "defaultValue": false
+  },
+
+  { "type": "separator", "label": "🔍 Barre de commande", "margin": "12px 0 4px 0" },
+  {
+    "type": "checkbox",
+    "property": "arczen.cmd-no-blur",
+    "label": "Sans flou (fond opaque, plus économe)",
+    "defaultValue": false
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.cmd-opacity",
+    "label": "Opacité du fond",
+    "defaultValue": "standard",
+    "placeholder": false,
+    "options": [
+      { "label": "Nettement plus transparente", "value": "-2" },
+      { "label": "Un peu plus transparente", "value": "-1" },
+      { "label": "Standard (Arc)", "value": "standard" },
+      { "label": "Un peu plus opaque", "value": "1" },
+      { "label": "Nettement plus opaque", "value": "2" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.cmd-blur",
+    "label": "Intensité du flou",
+    "defaultValue": "standard",
+    "placeholder": false,
+    "options": [
+      { "label": "Plus léger", "value": "light" },
+      { "label": "Standard (Arc)", "value": "standard" },
+      { "label": "Plus fort", "value": "strong" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.urlbar-full-actions",
+    "label": "Afficher le zoom et la traduction (pilule d'URL et barre ouverte)",
+    "defaultValue": false
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.ext-tiles",
+    "label": "Extensions épinglées en tuiles sous la barre d'adresse",
+    "defaultValue": false
+  },
+
+  { "type": "separator", "label": "📋 Menu du site", "margin": "12px 0 4px 0" },
+  {
+    "type": "dropdown",
+    "property": "arczen.site-panel-action",
+    "label": "4e bouton (à la place du marque-page)",
+    "defaultValue": "copy-link",
+    "placeholder": false,
+    "options": [
+      { "label": "Copier le lien", "value": "copy-link" },
+      { "label": "Mode lecture", "value": "reader" },
+      { "label": "Picture-in-Picture", "value": "pip" },
+      { "label": "Couper / rétablir le son de l'onglet", "value": "mute" },
+      { "label": "Vue partagée (ouvrir / quitter)", "value": "split" },
+      { "label": "Marque-page (bouton d'origine de Zen)", "value": "bookmark" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.sitemenu-opaque",
+    "label": "Sans transparence (fond opaque même avec l'acrylique de Windows)",
+    "defaultValue": false
+  },
+
+  { "type": "text", "label": "**🗂️ Onglets**", "margin": "28px 0 6px 0", "size": "19px" },
+
+  { "type": "separator", "label": "🧹 Tidy", "margin": "8px 0 4px 0" },
+  {
+    "type": "dropdown",
+    "property": "arczen.tidy-min-tabs",
+    "label": "Afficher le bouton à partir de",
+    "defaultValue": "6",
+    "placeholder": false,
+    "options": [
+      { "label": "3 onglets", "value": "3" },
+      { "label": "4 onglets", "value": "4" },
+      { "label": "5 onglets", "value": "5" },
+      { "label": "6 onglets", "value": "6" },
+      { "label": "8 onglets", "value": "8" },
+      { "label": "10 onglets", "value": "10" },
+      { "label": "15 onglets", "value": "15" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.tidy.provider",
+    "label": "Méthode de tri",
+    "defaultValue": "rules",
+    "placeholder": false,
+    "options": [
+      { "label": "Par thème (local, sans IA ni réseau)", "value": "rules" },
+      { "label": "Par site, puis catégorie (tri de la V1)", "value": "sites" },
+      { "label": "Par intention : Claude Haiku (API payante, titres et sites envoyés)", "value": "claude" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.tidy.detail",
+    "label": "Finesse des groupes",
+    "defaultValue": "balanced",
+    "placeholder": false,
+    "options": [
+      { "label": "Larges (peu de sections)", "value": "broad" },
+      { "label": "Équilibrée", "value": "balanced" },
+      { "label": "Précise (plus de sections)", "value": "fine" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.tidy.leftovers",
+    "label": "Onglets isolés",
+    "defaultValue": "divers",
+    "placeholder": false,
+    "options": [
+      { "label": "Section « Divers » en dernier (tout est rangé)", "value": "divers" },
+      { "label": "Laisser hors section, sous les sections", "value": "none" }
+    ]
+  },
+  {
+    "type": "string",
+    "property": "arczen.tidy.instructions",
+    "label": "Consignes pour Claude",
+    "placeholder": "ex. : sépare travail et loisirs ; une section par projet",
+    "defaultValue": "",
+    "conditions": [{ "if": { "property": "arczen.tidy.provider", "value": "claude" } }]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.folder-ai-names",
+    "label": "Noms par le modèle local de Firefox (téléchargé au premier usage, en anglais)",
+    "defaultValue": false,
+    "conditions": [{ "not": { "property": "arczen.tidy.provider", "value": "claude" } }]
+  },
+
+  { "type": "separator", "label": "📑 Barre latérale", "margin": "12px 0 4px 0" },
+  {
+    "type": "dropdown",
+    "property": "arczen.scrollbar-delay",
+    "label": "Barre de défilement : disparition après",
+    "defaultValue": "1000",
+    "placeholder": false,
+    "options": [
+      { "label": "0,5 s", "value": "500" },
+      { "label": "1 s (Arc)", "value": "1000" },
+      { "label": "1,5 s", "value": "1500" },
+      { "label": "2 s", "value": "2000" },
+      { "label": "3 s", "value": "3000" },
+      { "label": "Toujours visible", "value": "always" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.tidy-titles",
+    "label": "Titres épurés (sans le nom du site ; titre complet en infobulle)",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.folder-preview",
+    "label": "Aperçu d'un dossier replié au survol",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.gmail-preview",
+    "label": "Aperçu Gmail au survol (onglet Gmail épinglé ou favori : e-mails non lus)",
+    "defaultValue": true
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.gmail-rows",
+    "label": "Hauteur de l'aperçu Gmail (e-mails visibles avant défilement)",
+    "defaultValue": "6",
+    "placeholder": false,
+    "conditions": [{ "if": { "property": "arczen.gmail-preview", "value": true } }],
+    "options": [
+      { "label": "4", "value": "4" },
+      { "label": "6 (Arc)", "value": "6" },
+      { "label": "8", "value": "8" },
+      { "label": "10", "value": "10" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.gmail-category",
+    "label": "E-mails affichés dans l'aperçu Gmail",
+    "defaultValue": "primary",
+    "placeholder": false,
+    "conditions": [{ "if": { "property": "arczen.gmail-preview", "value": true } }],
+    "options": [
+      { "label": "Principale (sans promotions ni réseaux sociaux)", "value": "primary" },
+      { "label": "Toute la boîte de réception", "value": "inbox" }
+    ]
+  },
+
+  { "type": "separator", "label": "🔗 Liens et téléchargements", "margin": "12px 0 4px 0" },
+  {
+    "type": "dropdown",
+    "property": "arczen.link-preview",
+    "label": "Aperçu de lien avant ouverture",
+    "defaultValue": "auto",
+    "placeholder": false,
+    "options": [
+      { "label": "Désactivé (réglage de Zen)", "value": "auto" },
+      { "label": "Appui long sur un lien ou menu contextuel", "value": "longpress" },
+      { "label": "Maj au survol, appui long ou menu contextuel", "value": "shift" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.little-arc",
+    "label": "Little Arc : liens d'autres applications dans une petite fenêtre (Ctrl+Alt+N)",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.tidy-downloads",
+    "label": "Renommer les téléchargements aux noms illisibles (annulable)",
+    "defaultValue": true
+  },
+
+  { "type": "text", "label": "**🎬 Picture-in-Picture**", "margin": "28px 0 6px 0", "size": "19px" },
+  { "type": "separator", "label": "▶️ Lecteur", "margin": "8px 0 4px 0" },
+  {
+    "type": "checkbox",
+    "property": "arczen.pip-auto",
+    "label": "Automatique en quittant l'onglet d'une vidéo en lecture",
+    "defaultValue": false
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.native-pip",
+    "label": "Lecteur de Firefox (minutage, volume, sous-titres, plein écran)",
+    "defaultValue": false
+  },
+  {
+    "type": "dropdown",
+    "property": "arczen.pip-anim",
+    "label": "Apparition à l'ouverture",
+    "defaultValue": "320",
+    "placeholder": false,
+    "options": [
+      { "label": "Douce (320 ms)", "value": "320" },
+      { "label": "Posée (450 ms)", "value": "450" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "arczen.pip-throw",
+    "label": "Lancer vers un coin de la fenêtre (sinon déplacement de Windows)",
+    "defaultValue": true
+  }
+]

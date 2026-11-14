@@ -1,0 +1,267 @@
+/* Little Arc (arczen.uc.js, réglage « arczen.little-arc »).
+   Petite fenêtre marquée « arczen-little » : ni barre latérale ni barre d'outils, une barre
+   d'une rangée au-dessus de la page, comme la Little Arc : feux façon macOS à gauche,
+   pilule-champ (loupe, domaine centré, capture, copier le lien), « Ouvrir dans <espace> Ctrl+O »
+   avec son chevron. Page posée dans une carte arrondie, comme Arc : mêmes jetons que la
+   fenêtre principale (--zen-element-separation, réglage « Épaisseur des bords », et rayon de
+   la carte de Zen), marge de la couleur de l'espace à gauche, à droite et en bas ; la barre
+   est au-dessus. Le fond (barre et marge) est celui de l'espace actif de la fenêtre
+   principale, recopié par arczen.uc.js sur #zen-browser-background.
+   Tout est limité à :root[arczen-little] : la fenêtre principale n'est pas touchée. */
+
+:root[arczen-little] {
+  --arc-little-bar: calc(38px * var(--arc-scale));
+  --arc-little-field: calc(28px * var(--arc-scale));
+  --arc-little-btn: calc(24px * var(--arc-scale));
+  /* pilule-champ et bloc « Ouvrir dans » (28 pt de haut) : un peu plus ronds que les boutons */
+  --arc-little-radius: calc(9px * var(--arc-scale) * var(--arc-corner-k));
+  --arc-little-radius-btn: calc(7px * var(--arc-scale) * var(--arc-corner-k));
+
+  /* barre latérale, barre d'outils et barre de favoris masquées (visibility, pas display :
+     Zen continue de mesurer ces éléments) ; la barre d'adresse est rendue visible plus bas */
+  & #navigator-toolbox,
+  & #zen-sidebar-splitter,
+  & #zen-appcontent-navbar-wrapper {
+    visibility: collapse !important;
+  }
+  /* en mode compact, Zen rend #titlebar « visible » au survol du bord (zen-has-hover,
+     zen-user-show…), ce qui l'emporte sur le masquage hérité de la boîte à outils : la sidebar
+     réapparaissait. On le masque lui aussi : Little Arc reste une vue d'un seul onglet. */
+  & #navigator-toolbox #titlebar {
+    visibility: collapse !important;
+  }
+
+  /* carte : la marge de Zen n'existe qu'à droite et en bas (la barre latérale fait la gauche),
+     on la pose des trois côtés ; le rayon reste celui de Zen, comme dans la fenêtre principale */
+  & #zen-tabbox-wrapper {
+    margin: 0 var(--zen-element-separation) var(--zen-element-separation) !important;
+  }
+  & #tabbrowser-tabbox,
+  & #tabbrowser-tabpanels {
+    margin: 0 !important;
+  }
+
+  /* barre de commande (clic sur la pilule, Ctrl+L, Ctrl+Alt+N) : centrée sous la barre.
+     L'identifiant doublé passe devant le panneau d'URL ancré à la pilule (commandbar.css),
+     dont la pilule est ici masquée. */
+  & #urlbar#urlbar:is([popover-open], [breakout-extend]) {
+    visibility: visible !important;
+    position: fixed !important;
+    left: 50% !important;
+    translate: -50% 0 !important;
+    top: calc(var(--arc-little-bar) + 8px) !important;
+    width: min(100vw - 32px, 640px * var(--arc-cmd-scale, 1)) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
+/* --- Barre --- */
+#arczen-little-bar {
+  height: var(--arc-little-bar) !important;
+  min-height: var(--arc-little-bar) !important;
+  padding-inline: calc(8px * var(--arc-scale)) !important;
+  gap: calc(6px * var(--arc-scale)) !important;
+  -moz-window-dragging: drag;
+  color: var(--arc-fg-tab) !important;
+  font-size: var(--arc-font-tab) !important;
+  letter-spacing: var(--arc-tracking);
+}
+
+.arczen-little-btn {
+  -moz-window-dragging: no-drag;
+  appearance: none !important;
+  box-sizing: border-box !important;
+  min-width: var(--arc-little-btn) !important;
+  height: var(--arc-little-btn) !important;
+  margin: 0 !important;
+  padding: 0 calc(4px * var(--arc-scale)) !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border: none !important;
+  border-radius: var(--arc-radius-btn) !important;
+  corner-shape: var(--arc-corner-shape);
+  background-color: transparent !important;
+  color: var(--arc-fg-icon) !important;
+  transition: none !important; /* invariant : seules transform et opacity s'animent */
+
+  &:hover {
+    background-color: var(--arc-hover-bg) !important;
+    color: var(--arc-fg-icon-hover) !important;
+  }
+  &:hover:active,
+  &[open] {
+    background-color: var(--arc-active-bg) !important;
+  }
+
+  & .toolbarbutton-icon {
+    width: calc(16px * var(--arc-scale)) !important;
+    height: calc(16px * var(--arc-scale)) !important;
+    padding: 0 !important;
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor !important;
+  }
+  & .toolbarbutton-text,
+  & .toolbarbutton-menu-dropmarker {
+    display: none !important;
+  }
+}
+
+/* --- Pilule-champ : loupe, domaine centré, capture et copier le lien --- */
+#arczen-little-field {
+  -moz-window-dragging: no-drag;
+  height: var(--arc-little-field) !important;
+  min-width: 0;
+  padding-inline: calc(8px * var(--arc-scale)) calc(3px * var(--arc-scale)) !important;
+  gap: calc(2px * var(--arc-scale));
+  border-radius: var(--arc-little-radius) !important;
+  corner-shape: var(--arc-corner-shape);
+  background-color: var(--arc-hover-bg) !important;
+  cursor: text;
+
+  &:hover {
+    background-color: var(--arc-active-bg) !important;
+  }
+}
+
+#arczen-little-glass {
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+  width: calc(14px * var(--arc-scale)) !important;
+  height: calc(14px * var(--arc-scale)) !important;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--arc-fg-icon) !important;
+}
+
+/* domaine centré sur la pilule : le retrait de gauche compense les deux icônes de droite */
+#arczen-little-domain {
+  margin: 0 !important;
+  margin-inline-start: calc(var(--arc-little-btn) * 2 - 14px * var(--arc-scale)) !important;
+  text-align: center;
+  font-weight: 500;
+  color: var(--arc-fg-tab) !important;
+}
+
+#arczen-little-shot,
+#arczen-little-copy {
+  min-width: calc(22px * var(--arc-scale)) !important;
+  height: calc(22px * var(--arc-scale)) !important;
+  border-radius: var(--arc-little-radius-btn) !important;
+  & .toolbarbutton-icon {
+    width: calc(14px * var(--arc-scale)) !important;
+    height: calc(14px * var(--arc-scale)) !important;
+  }
+}
+#arczen-little-shot { list-style-image: url("chrome://browser/skin/screenshot.svg") !important; }
+#arczen-little-copy { list-style-image: url("chrome://browser/skin/zen-icons/link.svg") !important; }
+
+/* --- « <espace> Ctrl+O » et chevron : un seul bloc à deux segments --- */
+.arczen-little-open {
+  height: var(--arc-little-field) !important;
+  border-radius: var(--arc-little-radius) !important;
+  background-color: var(--arc-hover-bg) !important;
+  color: var(--arc-fg) !important;
+  font-size: var(--arc-font-small) !important;
+
+  & .toolbarbutton-icon { display: none !important; }
+  &:hover { background-color: var(--arc-active-bg) !important; color: var(--arc-fg) !important; }
+}
+#arczen-little-open {
+  padding-inline: calc(10px * var(--arc-scale)) calc(6px * var(--arc-scale)) !important;
+  gap: calc(4px * var(--arc-scale));
+  border-start-end-radius: 0 !important;
+  border-end-end-radius: 0 !important;
+}
+#arczen-little-spaces {
+  margin-inline-start: calc(-6px * var(--arc-scale) + 1px) !important; /* filet de 1 px entre les segments */
+  min-width: calc(22px * var(--arc-scale)) !important;
+  border-start-start-radius: 0 !important;
+  border-end-start-radius: 0 !important;
+  list-style-image: url("chrome://browser/skin/zen-icons/arrow-down.svg") !important;
+  & .toolbarbutton-icon {
+    display: flex !important;
+    width: calc(12px * var(--arc-scale)) !important;
+    height: calc(12px * var(--arc-scale)) !important;
+  }
+}
+.arczen-little-open-space,
+.arczen-little-key {
+  margin: 0 !important;
+}
+.arczen-little-open-space { font-weight: 700; letter-spacing: 0.02em; }
+.arczen-little-key {
+  margin-inline-start: calc(2px * var(--arc-scale)) !important;
+  padding: calc(1px * var(--arc-scale)) calc(4px * var(--arc-scale)) !important;
+  border-radius: calc(5px * var(--arc-scale) * var(--arc-corner-k));
+  corner-shape: var(--arc-corner-shape);
+  background-color: var(--arc-hover-bg);
+  color: var(--arc-fg-dim);
+  font-size: calc(11px * var(--arc-scale));
+}
+
+/* --- Feux façon macOS, à gauche : fermer, réduire, agrandir ---
+   Référence Little Arc : Ø 12 pt, pas de 20 pt (écart 8 pt), centre du premier feu à 18 pt
+   du bord, 14 pt avant la pilule ; centre vertical aligné sur la pilule. Même logique que les
+   feux de la fenêtre principale (window.css) : gris au repos ; au survol du groupe, les trois
+   couleurs pleines et les glyphes de macOS ; fenêtre inactive : gris translucide. Le groupe
+   et les feux sont hors zone de glissement (sinon Windows garde la souris et le survol tombe). */
+#arczen-little-lights {
+  -moz-window-dragging: no-drag;
+  gap: calc(8px * var(--arc-scale));
+  /* rembourrage de survol compensé par une marge négative : la mise en page ne bouge pas */
+  padding: calc(4px * var(--arc-scale));
+  margin-block: calc(-4px * var(--arc-scale));
+  margin-inline: calc(12px * var(--arc-scale) - 8px * var(--arc-scale) - 4px * var(--arc-scale))
+    calc(14px * var(--arc-scale) - 6px * var(--arc-scale) - 4px * var(--arc-scale));
+}
+.arczen-little-light {
+  --arc-light: #ff5f57;
+  --arc-glyph: none;
+  -moz-window-dragging: no-drag;
+  appearance: none !important;
+  box-sizing: border-box !important;
+  width: calc(12px * var(--arc-scale)) !important;
+  min-width: calc(12px * var(--arc-scale)) !important;
+  height: calc(12px * var(--arc-scale)) !important;
+  min-height: calc(12px * var(--arc-scale)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0.5px solid color-mix(in srgb, var(--arc-light) 30%, transparent) !important;
+  border-radius: 50% !important;
+  corner-shape: round !important;
+  background: light-dark(rgb(208, 208, 207), rgb(96, 96, 95)) no-repeat center / 100% 100% !important;
+  background-origin: border-box !important;
+  box-shadow: none !important;
+  list-style-image: none !important;
+  color: transparent !important;
+  transition: none !important;
+
+  & > .toolbarbutton-icon,
+  & > .toolbarbutton-text {
+    display: none !important;
+  }
+}
+#arczen-little-close {
+  --arc-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3.75 3.75l4.5 4.5M8.25 3.75l-4.5 4.5' stroke='rgba(0,0,0,0.55)' stroke-width='1.1' stroke-linecap='round' fill='none'/></svg>");
+}
+#arczen-little-min {
+  --arc-light: #febc2e;
+  --arc-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3.2 6h5.6' stroke='rgba(0,0,0,0.55)' stroke-width='1.2' stroke-linecap='round' fill='none'/></svg>");
+}
+#arczen-little-max {
+  --arc-light: #28c840;
+  --arc-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3.5 3.5h3.6L3.5 7.1z M8.5 8.5H4.9L8.5 4.9z' fill='rgba(0,0,0,0.55)'/></svg>");
+}
+#arczen-little-lights:hover > .arczen-little-light {
+  background-color: var(--arc-light) !important;
+  background-image: var(--arc-glyph) !important;
+  border-color: color-mix(in srgb, var(--arc-light) 80%, black) !important;
+}
+#arczen-little-lights > .arczen-little-light:hover:active {
+  border-color: color-mix(in srgb, var(--arc-light) 60%, black) !important;
+  background-color: color-mix(in srgb, var(--arc-light) 80%, black) !important;
+}
+/* (le texte du feu est transparent : currentColor donnerait un feu invisible) */
+:root[arczen-little]:-moz-window-inactive #arczen-little-lights:not(:hover) > .arczen-little-light {
+  background-color: color-mix(in srgb, var(--arc-fg) 18%, transparent) !important;
+  border-color: transparent !important;
+}

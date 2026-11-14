@@ -1,0 +1,43 @@
+/* Téléchargements renommés (arczen.uc.js, réglage « arczen.tidy-downloads ») : mention sobre
+   « Renommé depuis « nom d'origine » · Annuler » sous le nom de l'élément, dans le panneau des
+   téléchargements, alignée sur la ligne d'état. Seule la racine du nom d'origine se rétrécit
+   (points de suspension en fin, extension gardée), le nom complet est dans l'infobulle.
+   Aucune animation, aucune ombre.
+   Les !important l'emportent sur les marges et le curseur que la feuille du navigateur donne aux
+   étiquettes XUL (cette feuille est chargée à un niveau inférieur à celles du navigateur). */
+#downloadsListBox > richlistitem .arczen-dltidy {
+  margin: 0 !important;
+  min-width: 0;
+  font-size: 0.9em;
+}
+
+#downloadsListBox > richlistitem .arczen-dltidy > label {
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: none;
+  white-space: nowrap;
+}
+
+#downloadsListBox > richlistitem .arczen-dltidy > .arczen-dltidy-from {
+  flex: 0 1 auto;
+  min-width: 2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#downloadsListBox > richlistitem .arczen-dltidy > :is(.arczen-dltidy-note, .arczen-dltidy-from, .arczen-dltidy-from-ext, .arczen-dltidy-sep) {
+  opacity: var(--downloads-item-details-opacity, 0.6);
+}
+
+#downloadsListBox > richlistitem .arczen-dltidy > .arczen-dltidy-sep {
+  margin-inline: 0.35em !important;
+}
+
+#downloadsListBox > richlistitem .arczen-dltidy > .arczen-dltidy-undo {
+  cursor: pointer !important;
+  font-weight: 600;
+}
+
+#downloadsListBox > richlistitem .arczen-dltidy > .arczen-dltidy-undo:hover {
+  text-decoration: underline;
+}

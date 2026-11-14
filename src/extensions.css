@@ -1,0 +1,231 @@
+/* Extensions épinglées dans la sidebar.
+   - Par défaut (1 à 5 extensions, sidebar dépliée, arczen.uc.js chargé) : icônes dans la
+     pilule d'URL, comme Arc (bloc en fin de fichier).
+   - Sinon (plus de 5, script absent, ou pref « arczen.ext-tiles ») :
+     une rangée de tuiles sous la pilule d'URL (au lieu d'une ligne pleine largeur par extension).
+
+   Le conteneur devient une grille de 60 colonnes : 60 se divise par 1 à 6, ce qui permet
+   à 1…6 tuiles de se partager exactement la largeur. Les onglets et le lecteur multimédia
+   gardent chacun leur ligne, donc le lecteur ne pousse rien hors de la sidebar. */
+
+:root[zen-sidebar-expanded="true"] #TabsToolbar-customization-target {
+  display: grid !important;
+  grid-template-columns: repeat(60, minmax(0, 1fr));
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+
+  & > #tabbrowser-tabs {
+    grid-area: 3 / 1 / 4 / -1;
+  }
+  & > #zen-media-controls-toolbar {
+    grid-area: 4 / 1 / 5 / -1;
+  }
+  /* Tout autre bouton posé ici garde sa ligne entière, comme dans Zen. */
+  & > toolbarbutton,
+  & > toolbaritem:not(.unified-extensions-item) {
+    grid-column: 1 / -1;
+  }
+
+  & > .unified-extensions-item {
+    grid-column: span 10;
+    width: auto !important;
+    min-width: 0 !important;
+    /* Hauteur et marges suivent --arc-scale (identiques à 100 %). */
+    height: calc(32px * var(--arc-scale));
+    margin: calc(7px * var(--arc-scale)) calc(4px * var(--arc-scale)) calc(1px * var(--arc-scale)) !important;
+    /* Même coin continu que les tuiles Favorites (règle des coins de tokens.css). */
+    border-radius: var(--arc-radius-tile) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+    background: var(--zen-toolbar-element-bg) !important;
+
+    &:hover {
+      background: color-mix(in srgb, currentColor 14%, transparent) !important;
+    }
+
+    /* Bords de rangée alignés sur la pilule d'URL et les tuiles Favorites (retrait de 2 px,
+       8 px entre deux tuiles). */
+    &:nth-child(6n + 1 of .unified-extensions-item) {
+      margin-inline-start: calc(2px * var(--arc-scale)) !important;
+    }
+    &:nth-child(6n of .unified-extensions-item),
+    &:nth-last-child(1 of .unified-extensions-item) {
+      margin-inline-end: calc(2px * var(--arc-scale)) !important;
+    }
+
+    /* Largeur selon le nombre de tuiles (1 à 5 ; à partir de 6 : six par rangée). */
+    &:nth-child(1 of .unified-extensions-item) {
+      &:nth-last-child(1 of .unified-extensions-item) {
+        grid-column: span 60;
+      }
+      &:nth-last-child(2 of .unified-extensions-item),
+      &:nth-last-child(2 of .unified-extensions-item) ~ .unified-extensions-item {
+        grid-column: span 30;
+      }
+      &:nth-last-child(3 of .unified-extensions-item),
+      &:nth-last-child(3 of .unified-extensions-item) ~ .unified-extensions-item {
+        grid-column: span 20;
+      }
+      &:nth-last-child(4 of .unified-extensions-item),
+      &:nth-last-child(4 of .unified-extensions-item) ~ .unified-extensions-item {
+        grid-column: span 15;
+      }
+      &:nth-last-child(5 of .unified-extensions-item),
+      &:nth-last-child(5 of .unified-extensions-item) ~ .unified-extensions-item {
+        grid-column: span 12;
+      }
+    }
+
+    /* L'icône est centrée ; le survol est porté par la tuile, pas par le bouton interne. */
+    & .unified-extensions-item-action-button {
+      justify-content: center !important;
+      --toolbarbutton-hover-background: transparent;
+      --toolbarbutton-active-background: transparent;
+    }
+    & .toolbarbutton-badge-stack {
+      flex: 0 0 auto !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* Pastille : Zen l'étire sur toute la largeur et l'affiche même vide (trait rouge). */
+    & .toolbarbutton-badge {
+      width: auto !important;
+      &:empty {
+        display: none !important;
+      }
+    }
+  }
+}
+
+/* --- Icônes dans la pilule d'URL --- Arc (A10) : icône de 14,7 pt sur l'axe de la pilule,
+   entre le texte et les icônes lien / réglages, 24 pt de centre à centre (et de la dernière
+   au lien). Ici 16 px × échelle, zone de survol de 24 × échelle.
+   Les widgets restent dans leur zone (CustomizableUI, menus, panneaux inchangés) : ils sont
+   seulement placés à l'écran par ancrage CSS sur le fond de la pilule. Hors du flux, ils ne
+   laissent plus de rangée de tuiles. Le panneau d'une extension s'ancre sur le bouton, donc
+   s'ouvre sous l'icône.
+   Le nombre d'extensions (attribut arczen-ext-count) vient d'arczen.uc.js.
+   Barre ouverte ([breakout-extend], flottante ou non) : le fond n'est plus une ancre, mais
+   Firefox garde la dernière position calculée ; arczen.uc.js pose donc arczen-urlbar-open
+   et les icônes sont masquées, sans retour des tuiles. */
+@supports (anchor-name: --a) and (position-visibility: anchors-valid) {
+  @media not -moz-pref("arczen.ext-tiles") {
+    :root[arczen-ext-count="1"] { --arczen-ext-n: 1; }
+    :root[arczen-ext-count="2"] { --arczen-ext-n: 2; }
+    :root[arczen-ext-count="3"] { --arczen-ext-n: 3; }
+    :root[arczen-ext-count="4"] { --arczen-ext-n: 4; }
+    :root[arczen-ext-count="5"] { --arczen-ext-n: 5; }
+
+    :root[zen-single-toolbar="true"][zen-sidebar-expanded="true"]:is([arczen-ext-count="1"], [arczen-ext-count="2"], [arczen-ext-count="3"], [arczen-ext-count="4"], [arczen-ext-count="5"]) {
+      & #urlbar:not([breakout-extend], [zen-floating-urlbar="true"]) {
+        & > .urlbar-background {
+          anchor-name: --arczen-pill;
+        }
+        /* Le texte s'arrête avant les icônes : nombre × pas, plus ce qui dépasse de la zone
+           de survol au-delà du bouton lien (13 px de demi-largeur) au-dessus de 108 %. */
+        & .urlbar-input-box {
+          anchor-name: --arczen-text;
+          margin-inline-end:calc(var(--arczen-ext-n) * 24px * var(--arc-scale) + max(0px, 12px * var(--arc-scale) - 13px)) !important;
+        }
+        /* Lien et réglages : Zen les retire du flux hors survol (visibility: collapse), ce qui
+           déplacerait la limite du texte. Ils gardent leur place, invisibles. */
+        & :is(.identity-box-button, .urlbar-page-action) {
+          visibility: hidden !important;
+        }
+        & :is(.identity-box-button, .urlbar-page-action):is([open], [showing]),
+        &[has-popup-open="true"] :is(.identity-box-button, .urlbar-page-action) {
+          visibility: visible !important;
+        }
+      }
+      /* Barre ouverte : attribut posé par arczen.uc.js. */
+      &[arczen-urlbar-open] #TabsToolbar-customization-target > .unified-extensions-item {
+        visibility: hidden !important;
+      }
+      /* Ordre d'empilement : les icônes sont peintes dans le contexte de #TabsToolbar
+         (will-change: opacity), placé au niveau 0 ; Zen met le conteneur de la barre au
+         niveau 1, au-dessus. Barre fermée, il redescend (ordre du document : la sidebar,
+         donc les icônes, passent devant) ; ouverte, il garde son niveau. */
+      &:not([arczen-urlbar-open]) #urlbar-container {
+        z-index: auto !important;
+      }
+      & #navigator-toolbox[zen-has-implicit-hover="true"] #urlbar:not([breakout-extend], [zen-floating-urlbar="true"]) :is(.identity-box-button, .urlbar-page-action) {
+        visibility: visible !important;
+      }
+
+      & #TabsToolbar-customization-target > .unified-extensions-item:not([hidden]) {
+        /* Rang depuis la droite (0 = la plus proche du lien). */
+        --arczen-ext-k: 0;
+        /* Verticalement : axe de la pilule. Horizontalement : dans la réserve laissée après le
+           texte (bord droit de .urlbar-input-box), donc toujours juste avant ce qui suit dans la
+           barre : lien natif, extensions que Zen affiche dans la barre au survol ou sur un
+           onglet vide. Le décalage max(…) recolle la dernière zone au lien sous 108 %. */
+        position: fixed !important;
+        position-anchor: --arczen-pill;
+        position-visibility: anchors-valid;
+        inset: auto !important;
+        top: calc(anchor(center) - 12px * var(--arc-scale)) !important;
+        left: calc(anchor(--arczen-text right) + max(0px, 13px - 12px * var(--arc-scale)) + (var(--arczen-ext-n) - 1 - var(--arczen-ext-k)) * 24px * var(--arc-scale)) !important;
+        width: calc(24px * var(--arc-scale)) !important;
+        height: calc(24px * var(--arc-scale)) !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        /* Survol : même carré arrondi que les boutons de la barre du haut (coin continu,
+           voile blanc ≈ 10 % en sombre). */
+        border-radius: var(--arc-radius-btn) !important;
+        corner-shape: var(--arc-corner-shape) !important;
+        background: transparent !important;
+
+        &:nth-last-child(2 of .unified-extensions-item:not([hidden])) { --arczen-ext-k: 1; }
+        &:nth-last-child(3 of .unified-extensions-item:not([hidden])) { --arczen-ext-k: 2; }
+        &:nth-last-child(4 of .unified-extensions-item:not([hidden])) { --arczen-ext-k: 3; }
+        &:nth-last-child(5 of .unified-extensions-item:not([hidden])) { --arczen-ext-k: 4; }
+
+        &:hover {
+          background: var(--arc-hover-bg) !important;
+        }
+
+        & > .unified-extensions-item-row-wrapper,
+        & .unified-extensions-item-action-button {
+          width: 100% !important;
+          height: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          align-items: center !important;
+          justify-content: center !important;
+          border-radius: inherit !important;
+        }
+        & .unified-extensions-item-action-button[open] {
+          background: var(--arc-hover-bg) !important;
+        }
+        & .toolbarbutton-badge-stack {
+          padding: 0 !important;
+          margin: 0 !important;
+          width: auto !important;
+          height: auto !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+        }
+        & .toolbarbutton-icon {
+          width: calc(16px * var(--arc-scale)) !important;
+          height: calc(16px * var(--arc-scale)) !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+      }
+    }
+  }
+}
+
+/* --- Réglages du site / extensions (#zen-site-data-icon-button, curseurs, infobulle
+   « Extensions ») --- Toujours visible dans la pilule, survol ou non, quel que soit
+   « arczen.urlbar-full-actions » : Zen le fond hors survol (opacity 0, visibility collapse)
+   et le bloc ci-dessus le garde invisible. Les ID passent devant ces deux règles ; le lien
+   (#zen-copy-url-button) et les autres actions de page ne sont pas concernés. Zen le retire
+   lui-même (display: none) sur un onglet vide et quand la barre est ouverte. */
+#urlbar:not([breakout-extend]) #zen-site-data-icon-button {
+  opacity: 1 !important;
+  visibility: visible !important;
+}

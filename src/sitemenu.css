@@ -1,0 +1,576 @@
+/* Menu des réglages du site (bouton à droite de la pilule d'URL) : popover d'Arc.
+   Mesures relevées sur Arc sombre (refs/retour-2/05-arc-menu-site.png, mesures.md §4) :
+   1 pt macOS = 1 px CSS, le tout multiplié par --arc-menu-scale (préférence « Échelle du menu
+   du site », indépendante de l'échelle de la sidebar). Thème clair déduit (mêmes opacités,
+   contrastes inversés). Tout est limité à #zen-unified-site-data-panel : les autres panneaux
+   ne sont pas touchés. Nova (chargé avant) pose ses propres !important : chaque règle d'ici
+   reprend l'id du panneau pour l'emporter.
+
+   Cotes d'Arc (pt) : popover 210 de large, contenu 192 (9 de chaque côté), 8,5 en haut, 9 en
+   bas ; flèche 21 x 9 centrée en haut ; coins ≈ cercle de 15 ; 4 boutons 43 x 28 ; tuiles
+   43 x 28 sur les mêmes colonnes, pas vertical 35,7 ; réglages 28 de haut, pas de 38,3 ;
+   filet 14 sous la dernière ligne ; « Secure » 73 x 28 et « … » rond de 28, 9 sous le filet.
+   Recalé (lot L) sur refs/retour-4/05 (Arc et ArcZen côte à côte, ≈ 1,95 px par pt) :
+   marge haute 7,7 (bord → boutons), titre « Extensions » 14 sous les boutons, tuiles 28 de
+   haut au pas de 35,7, fond ≈ 54-59 sur page sombre, liseré clair ≈ +20 (+40 en haut). */
+
+#zen-unified-site-data-panel {
+  --asm-s: var(--arc-menu-scale, 1);
+  --asm-fg: var(--arc-fg, light-dark(rgb(0, 0, 0), rgb(255, 255, 255)));
+
+  /* Matière : sur Arc, gris translucide ≈ rgba(72, 72, 72, 0.655) posé sur un flou : relevé
+     à 54-59 sur page sombre, 133-142 sur page blanche.
+     - Fond acrylique de Windows actif (voir plus bas) : la matière système, déjà claire
+       (≈ 75 sous notre ancien voile, relevé sur la capture 05), s'ajoute au voile ; un voile
+       plus sombre et un peu plus léger ramène l'ensemble à ≈ 56 sur fond sombre.
+     - Sinon : aplat opaque équivalent à la moyenne d'Arc sur fond sombre (56). Lisible sans
+       aucun flou. */
+  --asm-bg-acrylic: light-dark(rgba(246, 246, 246, 0.6), rgba(40, 40, 40, 0.55));
+  --asm-bg-opaque: light-dark(rgb(236, 236, 236), rgb(56, 56, 56));
+  --asm-bg: var(--asm-bg-opaque);
+  --asm-ring-in: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
+  --asm-ring-out: light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.55));
+
+  --asm-title: color-mix(in srgb, var(--asm-fg) 88%, transparent);      /* « Extensions », « Settings » : crête 225 */
+  --asm-text: color-mix(in srgb, var(--asm-fg) 94%, transparent);       /* ligne 1 d'un réglage : ≈ 241 */
+  --asm-text-dim: color-mix(in srgb, var(--asm-fg) 62%, transparent);   /* ligne 2 : ≈ 158-162 */
+  --asm-tile: color-mix(in srgb, var(--asm-fg) 4%, transparent);        /* tuile d'extension : blanc 3-4 % */
+  --asm-tile-hover: color-mix(in srgb, var(--asm-fg) 9%, transparent);
+  --asm-line: color-mix(in srgb, var(--asm-fg) 17%, transparent);       /* filet du pied */
+  --asm-chip: color-mix(in srgb, var(--asm-fg) 5%, transparent);        /* pastille « Secure » : blanc 4-5 % */
+  --asm-chip-hover: color-mix(in srgb, var(--asm-fg) 10%, transparent);
+  /* Boutons du haut : dégradé 41 → 23, liseré clair en haut (≈ 77), contour sombre discret
+     (≈ 51 sur 59) et ombre douce de 3-4 px sous le bouton ; pictogramme ≈ 200-230 */
+  --asm-btn-top: light-dark(rgb(255, 255, 255), rgb(41, 41, 41));
+  --asm-btn-bottom: light-dark(rgb(240, 240, 240), rgb(23, 23, 23));
+  --asm-btn-edge: light-dark(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.17));
+  --asm-btn-ring: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3));
+  --asm-btn-shadow: light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.3));
+  --asm-btn-fg: light-dark(rgba(0, 0, 0, 0.78), rgba(255, 255, 255, 0.88));
+  /* Rayons : cercle mesuré sur Arc × --arc-corner-k, forme continue de tokens.css */
+  --asm-k: var(--arc-corner-k, 1.25);
+  --asm-r-btn: calc(5px * var(--asm-s) * var(--asm-k));
+  --asm-r-tile: calc(5px * var(--asm-s) * var(--asm-k));
+  --asm-r-chip: calc(5px * var(--asm-s) * var(--asm-k));
+
+  /* Pictogrammes d'Arc (redessinés, 16 x 16, trait 1,3) : appliqués en masque sur
+     currentColor, context-fill n'agissant pas sur les images data:. */
+  --asm-i-share: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.6 6.2H4.9C4 6.2 3.4 6.8 3.4 7.7V13C3.4 13.9 4 14.5 4.9 14.5H11.1C12 14.5 12.6 13.9 12.6 13V7.7C12.6 6.8 12 6.2 11.1 6.2H10.4M8 9.8V1.6M5.6 3.9L8 1.5L10.4 3.9'/%3E%3C/svg%3E");
+  --asm-i-boost: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(.8 .6) rotate(45 8 8)'%3E%3Cpath d='M6.2 6.6V2.7C6.2 1.9 6.8 1.4 7.5 1.4H8.5C9.2 1.4 9.8 1.9 9.8 2.7V6.6ZM6.2 6.6H9.8V8.2C9.8 8.6 9.5 8.9 9.1 8.9H6.9C6.5 8.9 6.2 8.6 6.2 8.2ZM7.2 8.9V13.6C7.2 14.1 7.6 14.5 8 14.5C8.4 14.5 8.8 14.1 8.8 13.6V8.9'/%3E%3C/g%3E%3Cpath fill='black' stroke='none' d='M3.6 1C3.8 2.6 4.4 3.2 6 3.4C4.4 3.6 3.8 4.2 3.6 5.8C3.4 4.2 2.8 3.6 1.2 3.4C2.8 3.2 3.4 2.6 3.6 1Z'/%3E%3Ccircle cx='1.9' cy='6.6' r='.6' fill='black' stroke='none'/%3E%3C/svg%3E");
+  --asm-i-shot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.6C2 4.8 2.6 4.2 3.4 4.2H4.9L5.9 2.7C6.1 2.4 6.4 2.3 6.7 2.3H9.3C9.6 2.3 9.9 2.4 10.1 2.7L11.1 4.2H12.6C13.4 4.2 14 4.8 14 5.6V12C14 12.8 13.4 13.4 12.6 13.4H3.4C2.6 13.4 2 12.8 2 12Z'/%3E%3Ccircle cx='8' cy='8.6' r='2.5'/%3E%3Ccircle cx='11.9' cy='6.3' r='.6' fill='black' stroke='none'/%3E%3C/svg%3E");
+  --asm-i-link: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.67 8.67A3.33 3.33 0 0 0 11.7 9.03L13.7 7.03A3.33 3.33 0 0 0 8.99 2.32L7.84 3.46M9.33 7.33A3.33 3.33 0 0 0 4.3 6.97L2.3 8.97A3.33 3.33 0 0 0 7.01 13.68L8.15 12.54'/%3E%3C/svg%3E");
+  --asm-i-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.3 8.6L6.4 11.6L12.7 4.6'/%3E%3C/svg%3E");
+  --asm-i-reader: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 4.4C6.9 3.5 5.2 3 3.1 3H2.4V12.4H3.1C5.2 12.4 6.9 12.9 8 13.8C9.1 12.9 10.8 12.4 12.9 12.4H13.6V3H12.9C10.8 3 9.1 3.5 8 4.4ZM8 4.4V13.6'/%3E%3C/svg%3E");
+  --asm-i-pip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='3' width='12' height='10' rx='1.6'/%3E%3Crect x='8.3' y='7.9' width='4' height='3.2' rx='.7' fill='black' stroke='none'/%3E%3C/svg%3E");
+  --asm-i-sound: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 6.1H4.8L8 3.4V12.6L4.8 9.9H2.6C2.3 9.9 2 9.6 2 9.3V6.7C2 6.4 2.3 6.1 2.6 6.1ZM10.6 5.8A3.2 3.2 0 0 1 10.6 10.2M12.4 4A5.8 5.8 0 0 1 12.4 12'/%3E%3C/svg%3E");
+  --asm-i-muted: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 6.1H4.8L8 3.4V12.6L4.8 9.9H2.6C2.3 9.9 2 9.6 2 9.3V6.7C2 6.4 2.3 6.1 2.6 6.1ZM10.8 6.2L14.2 9.6M14.2 6.2L10.8 9.6'/%3E%3C/svg%3E");
+  --asm-i-split: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='3' width='12' height='10' rx='1.6'/%3E%3Cpath d='M8 3V13'/%3E%3C/svg%3E");
+  --asm-i-bookmark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 3.4C4.5 2.9 4.9 2.5 5.4 2.5H10.6C11.1 2.5 11.5 2.9 11.5 3.4V13.6L8 10.9L4.5 13.6Z'/%3E%3C/svg%3E");
+  --asm-i-bookmark-on: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='black' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 3.4C4.5 2.9 4.9 2.5 5.4 2.5H10.6C11.1 2.5 11.5 2.9 11.5 3.4V13.6L8 10.9L4.5 13.6Z'/%3E%3C/svg%3E");
+  /* Ronds des réglages : gris (≈ 124) inactif, blanc (≈ 242) actif, pictogramme sombre (≈ 60) */
+  --asm-dot-off: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.3));
+  --asm-dot-on: light-dark(rgb(36, 36, 36), rgb(242, 242, 242));
+  --asm-dot-icon-off: light-dark(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.62));
+  --asm-dot-icon-on: light-dark(rgb(255, 255, 255), rgb(50, 50, 50));
+  /* « … » : rond plus sombre que le menu (≈ 95), points ≈ 226 */
+  --asm-more: light-dark(rgba(0, 0, 0, 0.07), rgba(0, 0, 0, 0.2));
+  --asm-more-hover: light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.3));
+
+  /* Flèche : 21 x 9, pointe arrondie, congés à la base (SVG en masque, teinte = fond du menu) */
+  --asm-arrow-w: calc(21px * var(--asm-s));
+  --asm-arrow-h: calc(9px * var(--asm-s));
+  --asm-arrow-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 9' preserveAspectRatio='none'%3E%3Cpath d='M0 9C2.6 9 3.9 8.4 5.1 7.2L9.1 1.3C9.8.4 11.2.4 11.9 1.3L15.9 7.2C17.1 8.4 18.4 9 21 9Z'/%3E%3C/svg%3E");
+
+  /* Largeur hors tout 210 (liseré de 1 px compris) : Zen l'applique au contenu bordé. */
+  --panel-width: calc(210px * var(--asm-s)) !important;
+  /* Zen dessine le contenu (::part(content), hors de portée de cette feuille) en coin rond
+     (superellipse(1)) d'un rayon --panel-border-radius / --zen-squircle-value : on compense.
+     Coin d'Arc sur la capture 05 : point à 45° à 9,5 px du sommet, portée 25-33 px, soit un
+     cercle de ≈ 15 pt (le coin continu de tokens.css n'est pas applicable ici, Zen imposant
+     la forme ronde ; un cercle de 15 pt suit le profil mesuré à moins d'un pixel près). */
+  --panel-border-radius: calc(15px * var(--asm-s) * var(--zen-squircle-value, 1)) !important;
+  --panel-border-color: var(--asm-ring-in) !important;
+  /* Contour sombre extérieur (≈ 55 % de noir, relevé sur fond blanc) et ombre portée courte :
+     ≈ 7 pt de dégradé, 30 % d'assombrissement au bord ; tient dans la marge d'ombre de 8 px. */
+  --panel-box-shadow: 0 0 0 0.5px var(--asm-ring-out), 0 3px 12px light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.4)) !important;
+  --panel-background-color: var(--asm-bg) !important;
+  --arrowpanel-background: var(--asm-bg) !important;
+  --panel-background: var(--asm-bg) !important;
+  --arrowpanel-color: var(--asm-fg) !important;
+}
+
+/* Fond acrylique de Windows actif pour les popups (préférence widget.windows.mica.popups,
+   1 = forcé, 2 = automatique sous Windows 11) : Zen remplace alors le fond du panneau par
+   50 % de noir sur la matière système. On y substitue la teinte d'Arc. Un backdrop-filter
+   placé dans le panneau ne flouterait rien (le panneau est une fenêtre à part), d'où son absence. */
+@media (-moz-windows-mica-popups) {
+  /* La fenêtre est alors arrondie et bordée par Windows : pas de liseré CSS, rogné en
+     rectangle sous les coins système, et pas de flèche (la zone autour serait acrylique). */
+  panel#zen-unified-site-data-panel {
+    --panel-border-color: transparent !important;
+  }
+}
+@media (-moz-windows-mica-popups) and (not (prefers-reduced-transparency: reduce)) {
+  @media not -moz-pref("arczen.sitemenu-opaque") {
+    panel#zen-unified-site-data-panel {
+      --asm-bg: var(--asm-bg-acrylic);
+    }
+  }
+}
+
+/* ---- Flèche (hors fond acrylique) : solidaire du popover, même fond, même liseré ----
+   L'hôte du panneau réserve 9 pt au-dessus du contenu (au-dessous s'il s'ouvre vers le
+   haut) ; deux pseudo-éléments y dessinent la flèche : ::before = liseré (fond + 12 % de
+   blanc, comme le bord du contenu), ::after = fond, décalé de 1 px vers le contenu, qui
+   recouvre le bord du contenu sur la largeur de la base. Le panneau est centré sous son
+   bouton par arczen.uc.js (moveToAnchor « bottomcenter topcenter »). */
+@media not (-moz-windows-mica-popups) {
+  panel#zen-unified-site-data-panel {
+    padding-top: var(--asm-arrow-h) !important;
+  }
+  panel#zen-unified-site-data-panel[side="bottom"] {
+    padding-top: 0 !important;
+    padding-bottom: var(--asm-arrow-h) !important;
+  }
+  panel#zen-unified-site-data-panel::before,
+  panel#zen-unified-site-data-panel::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    /* Le contenu est décalé de la marge d'ombre des popups (8 px sous Windows) */
+    top: var(--panel-box-shadow-margin, 0px);
+    left: calc(50% - var(--asm-arrow-w) / 2);
+    width: var(--asm-arrow-w);
+    height: var(--asm-arrow-h);
+    mask: var(--asm-arrow-mask) center / 100% 100% no-repeat;
+    pointer-events: none;
+  }
+  panel#zen-unified-site-data-panel::before {
+    background: linear-gradient(var(--asm-ring-in), var(--asm-ring-in)), var(--asm-bg);
+  }
+  panel#zen-unified-site-data-panel::after {
+    top: calc(var(--panel-box-shadow-margin, 0px) + 1px);
+    background: var(--asm-bg);
+  }
+  panel#zen-unified-site-data-panel[side="bottom"]::before,
+  panel#zen-unified-site-data-panel[side="bottom"]::after {
+    top: auto;
+    bottom: var(--panel-box-shadow-margin, 0px);
+    transform: scaleY(-1);
+  }
+  panel#zen-unified-site-data-panel[side="bottom"]::after {
+    bottom: calc(var(--panel-box-shadow-margin, 0px) + 1px);
+  }
+}
+
+/* ---- Contenu : 8,5 en haut, 9 sur les côtés et en bas (liseré de 1 px déduit) ---- */
+#zen-unified-site-data-panel panelmultiview {
+  margin: 0 !important;
+}
+#zen-unified-site-data-panel #unified-extensions-view {
+  /* la vue tient dans le liseré de 1 px */
+  width: calc(var(--panel-width) - 2px) !important;
+  min-width: calc(var(--panel-width) - 2px) !important;
+  max-width: calc(var(--panel-width) - 2px) !important;
+  box-sizing: border-box !important;
+  padding: calc(8.5px * var(--asm-s) - 1px) calc(9px * var(--asm-s) - 1px) calc(9px * var(--asm-s) - 1px) !important;
+  font-size: calc(13px * var(--asm-s)) !important;
+  letter-spacing: var(--arc-tracking, normal);
+  color: var(--asm-fg);
+}
+
+/* ---- Boutons du haut : 43 x 28 répartis sur 192 (pas 49,7), ordre d'Arc (partager, Boost,
+   capture), puis le 4e bouton configurable d'ArcZen (#arczen-site-action, créé par
+   arczen.uc.js, préférence arczen.site-panel-action) qui remplace le favori de Zen, sauf si
+   l'action choisie est justement « marque-page » ---- */
+#zen-unified-site-data-panel #zen-site-data-header {
+  flex-direction: row !important;
+  gap: 0 !important;
+  justify-content: space-between !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header-share { order: 1; }
+#zen-unified-site-data-panel #zen-site-data-header-boost { order: 2; }
+#zen-unified-site-data-panel #zen-site-data-header-screenshot { order: 3; }
+#zen-unified-site-data-panel #zen-site-data-header-bookmark { order: 4; }
+#zen-unified-site-data-panel #arczen-site-action { order: 4; }
+#zen-unified-site-data-panel #zen-site-data-header[arczen-action]:not([arczen-action="bookmark"]) > #zen-site-data-header-bookmark,
+#zen-unified-site-data-panel #zen-site-data-header[arczen-action="bookmark"] > #arczen-site-action {
+  display: none !important;
+}
+
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton {
+  /* Les boutons portent flex="1", que xul.css impose en !important (feuille de l'agent
+     utilisateur, imbattable) : on borne donc la largeur au lieu de toucher à flex. */
+  flex: 0 0 auto !important;
+  width: calc(43px * var(--asm-s)) !important;
+  min-width: calc(43px * var(--asm-s)) !important;
+  max-width: calc(43px * var(--asm-s)) !important;
+  height: calc(28px * var(--asm-s)) !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-radius: var(--asm-r-btn) !important;
+  corner-shape: var(--arc-corner-shape, squircle) !important;
+  background: linear-gradient(to bottom, var(--asm-btn-top), var(--asm-btn-bottom)) !important;
+  box-shadow: inset 0 1px 0 var(--asm-btn-edge), 0 0 0 0.5px var(--asm-btn-ring), 0 1px 3px var(--asm-btn-shadow) !important;
+  color: var(--asm-btn-fg) !important;
+  fill: currentColor !important;
+  /* l'image de Zen est remplacée par le masque du pictogramme d'Arc (voir plus bas) */
+  list-style-image: none !important;
+  transition: transform 120ms var(--arc-ease, ease) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton::before {
+  display: none !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton > .toolbarbutton-icon {
+  /* pictogrammes d'Arc : boîte de 16 pt, dessin de 13-15 pt, trait fin */
+  width: calc(16px * var(--asm-s)) !important;
+  height: calc(16px * var(--asm-s)) !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  background-color: currentColor !important;
+  mask: var(--asm-ico, none) center / 100% 100% no-repeat !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header-share { --asm-ico: var(--asm-i-share); }
+#zen-unified-site-data-panel #zen-site-data-header-boost { --asm-ico: var(--asm-i-boost); }
+#zen-unified-site-data-panel #zen-site-data-header-screenshot { --asm-ico: var(--asm-i-shot); }
+#zen-unified-site-data-panel #zen-site-data-header-bookmark { --asm-ico: var(--asm-i-bookmark); }
+#zen-unified-site-data-panel #zen-site-data-header-bookmark.active { --asm-ico: var(--asm-i-bookmark-on); }
+#zen-unified-site-data-panel #arczen-site-action[arczen-action="copy-link"] { --asm-ico: var(--asm-i-link); }
+#zen-unified-site-data-panel #arczen-site-action[arczen-action="reader"] { --asm-ico: var(--asm-i-reader); }
+#zen-unified-site-data-panel #arczen-site-action[arczen-action="pip"] { --asm-ico: var(--asm-i-pip); }
+#zen-unified-site-data-panel #arczen-site-action[arczen-action="mute"] { --asm-ico: var(--asm-i-sound); }
+#zen-unified-site-data-panel #arczen-site-action[arczen-action="mute"][arczen-state="on"] { --asm-ico: var(--asm-i-muted); }
+#zen-unified-site-data-panel #arczen-site-action[arczen-action="split"] { --asm-ico: var(--asm-i-split); }
+/* Lien copié : coche jusqu'à la fermeture du menu, apparition brève (transform seul) */
+#zen-unified-site-data-panel #arczen-site-action[arczen-done] { --asm-ico: var(--asm-i-check); }
+@media (prefers-reduced-motion: no-preference) {
+  #zen-unified-site-data-panel #arczen-site-action[arczen-done] > .toolbarbutton-icon {
+    animation: arczen-sitemenu-pop 180ms var(--arc-ease, ease-out) both;
+  }
+}
+@keyframes arczen-sitemenu-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton[disabled] > .toolbarbutton-icon {
+  opacity: 0.4 !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton > .toolbarbutton-text {
+  display: none !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton:hover {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--asm-btn-top), var(--asm-fg) 6%), color-mix(in srgb, var(--asm-btn-bottom), var(--asm-fg) 6%)) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton:hover:active {
+  transform: scale(0.96) !important;
+}
+/* Favori enregistré, mode lecture ou vue partagée actifs : bouton allumé */
+#zen-unified-site-data-panel #zen-site-data-header > toolbarbutton:is(.active, [arczen-state="on"]:not([arczen-action="mute"])) {
+  background: var(--asm-dot-on) !important;
+  color: var(--asm-dot-icon-on) !important;
+}
+
+/* ---- Titres de section : 13 pt gras, ligne de 16 ; « Extensions » 10,5 au-dessus et 8,7
+   au-dessous (capture 05 : 28 px des boutons au texte, 22 px du texte aux tuiles), « Settings »
+   12,7 et 9,5 ---- */
+#zen-unified-site-data-panel .zen-site-data-section {
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+}
+#zen-unified-site-data-panel .zen-site-data-section-header {
+  padding: calc(10.5px * var(--asm-s)) 0 calc(8.7px * var(--asm-s)) !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  align-items: center !important;
+  font-size: calc(13px * var(--asm-s)) !important;
+  font-weight: 700 !important;
+  line-height: calc(16px * var(--asm-s)) !important;
+  color: var(--asm-title);
+}
+#zen-unified-site-data-panel .zen-site-data-section-header > label {
+  margin: 0 !important;
+}
+@media -moz-pref("zen.theme.hide-unified-extensions-button") {
+  /* (la section Extensions n'est affichée par Zen qu'avec cette préférence) */
+  #zen-unified-site-data-panel #zen-site-data-section-addons ~ .zen-site-data-section > .zen-site-data-section-header {
+    padding-top: calc(12.7px * var(--asm-s)) !important;
+    padding-bottom: calc(9.5px * var(--asm-s)) !important;
+  }
+}
+/* « Manage », « More » : discrets, visibles au survol de la section (comportement Zen) */
+#zen-unified-site-data-panel .zen-site-data-section-header > label:nth-child(2) {
+  font-size: calc(11px * var(--asm-s)) !important;
+  font-weight: 500 !important;
+  line-height: calc(14px * var(--asm-s)) !important;
+  padding: 0 calc(6px * var(--asm-s)) !important;
+  border-radius: calc(6px * var(--asm-s)) !important;
+}
+
+/* ---- Extensions : 4 colonnes fixes de 43 sur les mêmes pas que les boutons, tuiles 43 x 28,
+   écart vertical 7,7 (capture 05 : 82-83 x 55 px, pas vertical 70 px).
+   Correctif : Firefox rend les extensions sans bouton d'action en <unified-extensions-item>
+   (liste .unified-extensions-list) et non en toolbaritem. Ces éléments échappaient à la règle
+   de tuile et gardaient celle de Nova (largeur calc((100% - 3 écarts) / 4), prévue pour un
+   flex-wrap) : dans une cellule de grille, ce pourcentage donne un quart de colonne (≈ 7 px).
+   La règle vise désormais tout enfant des listes, avec une largeur fixe. ---- */
+#zen-unified-site-data-panel #zen-site-data-addons {
+  display: grid !important;
+  grid-template-columns: repeat(4, calc(43px * var(--asm-s))) !important;
+  grid-auto-rows: calc(28px * var(--asm-s)) !important;
+  justify-content: space-between !important;
+  align-content: start !important;
+  gap: calc(7.7px * var(--asm-s)) 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+/* Au-delà de 420 px de haut (≈ 12 rangées), Zen fait défiler la liste et en estompe le bas
+   (attribut overflowing) : rien à changer, la grille garde ses colonnes. */
+#zen-unified-site-data-panel #zen-site-data-addons :is(#overflowed-extensions-list, #unified-extensions-area, .unified-extensions-list, #zen-site-data-new-addon-button-container) > * {
+  box-sizing: border-box !important;
+  width: calc(43px * var(--asm-s)) !important;
+  min-width: calc(43px * var(--asm-s)) !important;
+  max-width: calc(43px * var(--asm-s)) !important;
+  height: calc(28px * var(--asm-s)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow: clip !important;
+  border-radius: var(--asm-r-tile) !important;
+  corner-shape: var(--arc-corner-shape, squircle) !important;
+  background: var(--asm-tile) !important;
+  transition: transform 120ms var(--arc-ease, ease) !important; /* transform seul (invariant) */
+  transform: none !important;
+}
+#zen-unified-site-data-panel #zen-site-data-addons :is(#overflowed-extensions-list, #unified-extensions-area, .unified-extensions-list, #zen-site-data-new-addon-button-container) > [hidden] {
+  display: none !important;
+}
+#zen-unified-site-data-panel #zen-site-data-addons :is(#overflowed-extensions-list, #unified-extensions-area, .unified-extensions-list, #zen-site-data-new-addon-button-container) > *:hover {
+  background: var(--asm-tile-hover) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-addons :is(#overflowed-extensions-list, #unified-extensions-area, .unified-extensions-list, #zen-site-data-new-addon-button-container) > *:hover:active {
+  transform: scale(0.95) !important;
+}
+/* Intérieur d'une tuile : le bouton d'action occupe toute la tuile, icône 16 au centre */
+#zen-unified-site-data-panel #zen-site-data-addons :is(.unified-extensions-item-row-wrapper, .unified-extensions-item-action-button) {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: transparent !important;
+}
+#zen-unified-site-data-panel #zen-site-data-addons :is(.unified-extensions-item-icon, .toolbarbutton-icon) {
+  width: calc(16px * var(--asm-s)) !important;
+  height: calc(16px * var(--asm-s)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* Tuile « + » : pictogramme clair (≈ 225 sur Arc) */
+#zen-unified-site-data-panel #zen-site-data-new-addon-button {
+  color: var(--asm-title) !important;
+  fill: currentColor !important;
+}
+#zen-unified-site-data-panel #zen-site-data-new-addon-button .toolbarbutton-icon {
+  width: calc(13px * var(--asm-s)) !important;
+  height: calc(13px * var(--asm-s)) !important;
+}
+
+/* ---- Réglages et Boosts : rond de 28, pas de 38,3, deux lignes de 14, texte à 8 du rond ---- */
+#zen-unified-site-data-panel :is(#zen-site-data-settings-list, #zen-site-data-boost-list) {
+  gap: calc(10.3px * var(--asm-s)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-item, .permission-popup-boost-item) {
+  gap: calc(8px * var(--asm-s)) !important;
+  min-height: calc(28px * var(--asm-s)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  align-items: center !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-icon, .permission-popup-boost-icon) {
+  width: calc(28px * var(--asm-s)) !important;
+  min-width: calc(28px * var(--asm-s)) !important;
+  height: calc(28px * var(--asm-s)) !important;
+  min-height: calc(28px * var(--asm-s)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  fill: var(--asm-dot-icon-off) !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-icon, .permission-popup-boost-icon)::before {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  background: var(--asm-dot-off) !important;
+  opacity: 1 !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-icon, .permission-popup-boost-icon) > .toolbarbutton-icon {
+  width: calc(14px * var(--asm-s)) !important;
+  height: calc(14px * var(--asm-s)) !important;
+  opacity: 1 !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-item[state="allow"], .permission-popup-boost-item[state="enabled"]) :is(.permission-popup-permission-icon, .permission-popup-boost-icon) {
+  fill: var(--asm-dot-icon-on) !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-item[state="allow"], .permission-popup-boost-item[state="enabled"]) :is(.permission-popup-permission-icon, .permission-popup-boost-icon)::before {
+  background: var(--asm-dot-on) !important;
+}
+#zen-unified-site-data-panel :is(.permission-popup-permission-label, .permission-popup-boost-label) {
+  font-size: calc(13px * var(--asm-s)) !important;
+  font-weight: 600 !important;
+  line-height: calc(14px * var(--asm-s)) !important;
+  margin: 0 !important;
+  color: var(--asm-text) !important;
+}
+#zen-unified-site-data-panel :is(.zen-permission-popup-permission-state-label, .zen-permission-popup-boost-state-label) {
+  font-size: calc(13px * var(--asm-s)) !important;
+  font-weight: 400 !important;
+  line-height: calc(14px * var(--asm-s)) !important;
+  margin: 0 !important;
+  color: var(--asm-text-dim) !important;
+  opacity: 1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* ---- Pied : filet 1 px blanc 17 % à 14 sous la dernière ligne, puis 9 ; « Secure » 73 x 28
+   (cadenas 9 x 12,5 à 8,7 du bord, 5,5 avant le texte, rayon 5) ; « … » rond de 28 à droite ---- */
+#zen-unified-site-data-panel #zen-site-data-footer {
+  margin: calc(14px * var(--asm-s)) 0 0 !important;
+  padding: calc(9px * var(--asm-s)) 0 0 !important;
+  border-top: 1px solid var(--asm-line) !important;
+  gap: calc(6px * var(--asm-s)) !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info {
+  flex: 0 0 auto !important;
+  box-sizing: border-box !important;
+  height: calc(28px * var(--asm-s)) !important;
+  min-width: calc(73px * var(--asm-s)) !important;
+  margin: 0 auto 0 0 !important; /* « … » rejeté à droite */
+  /* Arc : 10 à droite du texte ; le texte Windows étant ≈ 3 px plus large que SF Pro,
+     7 suffisent pour garder les 73 de « Secure » (la pastille s'allonge pour un texte plus long). */
+  padding: 0 calc(7px * var(--asm-s)) 0 calc(6.7px * var(--asm-s)) !important;
+  gap: calc(3.5px * var(--asm-s)) !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  border-radius: var(--asm-r-chip) !important;
+  corner-shape: var(--arc-corner-shape, squircle) !important;
+  background: var(--asm-chip) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info:hover {
+  background: var(--asm-chip-hover) !important;
+}
+/* Nova masque le cadenas : on le rétablit (pictogrammes de Zen, déjà dans le navigateur) */
+#zen-unified-site-data-panel #zen-site-data-security-info[identity="secure"] {
+  list-style-image: url("chrome://browser/skin/zen-icons/security-fill.svg") !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info[identity="not-secure"] {
+  list-style-image: url("chrome://browser/skin/zen-icons/security-broken-fill.svg") !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info[identity="extension"] {
+  list-style-image: url("chrome://browser/skin/zen-icons/extension.svg") !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info > .toolbarbutton-icon {
+  display: flex !important;
+  width: calc(13px * var(--asm-s)) !important;
+  min-width: calc(13px * var(--asm-s)) !important;
+  height: calc(13px * var(--asm-s)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  fill: var(--asm-text) !important;
+  -moz-context-properties: fill, fill-opacity !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info > .toolbarbutton-text {
+  font-size: calc(13px * var(--asm-s)) !important;
+  font-weight: 600 !important;
+  line-height: calc(16px * var(--asm-s)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+}
+#zen-unified-site-data-panel #zen-site-data-security-info[identity="secure"] > .toolbarbutton-text {
+  color: var(--asm-text) !important;
+}
+#zen-unified-site-data-panel :is(#zen-site-data-actions, #zen-site-data-reader-mode) {
+  flex: 0 0 auto !important;
+  width: calc(28px * var(--asm-s)) !important;
+  min-width: calc(28px * var(--asm-s)) !important;
+  height: calc(28px * var(--asm-s)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  justify-content: center !important;
+  align-items: center !important;
+  color: var(--asm-text) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-actions {
+  background: var(--asm-more) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-actions:is(:hover, [open]) {
+  background: var(--asm-more-hover) !important;
+}
+#zen-unified-site-data-panel #zen-site-data-reader-mode:hover {
+  background: var(--asm-chip-hover) !important;
+}
+#zen-unified-site-data-panel :is(#zen-site-data-actions, #zen-site-data-reader-mode) > .toolbarbutton-icon {
+  width: calc(14px * var(--asm-s)) !important;
+  height: calc(14px * var(--asm-s)) !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+}
+
+/* ---- Ouverture : léger grossissement depuis la flèche (en haut au centre, ou en bas si le
+   panneau s'ouvre vers le haut), sur le contenu seulement.
+   - Fond acrylique actif : Zen coupe toute animation de la fenêtre (le fond système resterait
+     immobile) ; le contenu grossit et apparaît en fondu.
+   - Sinon : la fenêtre garde son fondu natif, on lui retire seulement le glissement vertical
+     natif, remplacé par le grossissement du contenu (pas de double fondu). ---- */
+@media (prefers-reduced-motion: no-preference) {
+  panel#zen-unified-site-data-panel {
+    transform: none !important;
+  }
+  #zen-unified-site-data-panel[animate="open"] panelmultiview {
+    transform-origin: center top;
+    animation: arczen-sitemenu-grow 150ms var(--arc-ease, ease-out) both;
+  }
+  #zen-unified-site-data-panel[animate="open"][side="bottom"] panelmultiview {
+    transform-origin: center bottom;
+  }
+  @media (-moz-windows-mica-popups) {
+    #zen-unified-site-data-panel[animate="open"] panelmultiview {
+      animation-name: arczen-sitemenu-in;
+    }
+  }
+}
+@keyframes arczen-sitemenu-grow {
+  from {
+    transform: scale(0.94);
+  }
+}
+@keyframes arczen-sitemenu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}

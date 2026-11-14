@@ -1,0 +1,48 @@
+/* Fonctions de Firefox exposées par ArcZen (lot R) : habillage Arc de l'aperçu de lien. Les
+   réglages qui les activent sont recopiés dans les prefs de Firefox par arczen.uc.js
+   (« arczen.link-preview », « arczen.pip-auto »). */
+
+/* ---- Aperçu de lien (panel#link-preview-panel, créé par LinkPreview.sys.mjs) ----
+   Même fond, liseré et ombre que le panneau du site (sitemenu.css). Le panneau porte en style
+   en ligne son rayon et son retrait (--og-padding) : d'où !important. La carte
+   <link-preview-card> vit dans un shadow DOM : elle n'est atteinte que par les variables
+   héritées (--panel-*, --border-radius-small, --og-padding). Zen dessine le contenu du panneau
+   (::part(content), hors de portée) en coin rond d'un rayon --panel-border-radius /
+   --zen-squircle-value : on compense, comme pour le panneau du site. */
+panel#link-preview-panel {
+  --arc-lp-bg-opaque: light-dark(rgb(236, 236, 236), rgb(56, 56, 56));
+  --arc-lp-bg-acrylic: light-dark(rgba(246, 246, 246, 0.6), rgba(40, 40, 40, 0.55));
+  --arc-lp-bg: var(--arc-lp-bg-opaque);
+  --arc-lp-ring-in: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
+  --arc-lp-ring-out: light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.55));
+  --arc-lp-r: calc(var(--arc-radius-panel, 12.5px) * var(--arc-menu-scale, 1));
+  --panel-border-radius: calc(var(--arc-lp-r) * var(--zen-squircle-value, 1)) !important;
+  --panel-border-color: var(--arc-lp-ring-in) !important;
+  --panel-box-shadow: 0 0 0 0.5px var(--arc-lp-ring-out), 0 3px 12px light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.4)) !important;
+  --panel-background-color: var(--arc-lp-bg) !important;
+  --arrowpanel-background: var(--arc-lp-bg) !important;
+  --panel-background: var(--arc-lp-bg) !important;
+  --panel-text-color: var(--arc-fg) !important;
+  --arrowpanel-color: var(--arc-fg) !important;
+  --text-color-deemphasized: color-mix(in srgb, var(--arc-fg) 62%, transparent) !important;
+  /* Image d'en-tête et boutons de la carte : coin d'Arc proportionnel. */
+  --border-radius-small: calc(5px * var(--arc-menu-scale, 1) * var(--arc-corner-k, 1.25)) !important;
+  --og-padding: calc(14px * var(--arc-menu-scale, 1)) !important;
+  --card-border-color: var(--arc-line) !important;
+}
+
+/* Fond acrylique de Windows pour les popups (widget.windows.mica.popups) : fenêtre bordée et
+   arrondie par Windows, pas de liseré CSS ; teinte d'Arc sur la matière système, comme le
+   panneau du site (même réglage d'opacité). */
+@media (-moz-windows-mica-popups) {
+  panel#link-preview-panel {
+    --panel-border-color: transparent !important;
+  }
+}
+@media (-moz-windows-mica-popups) and (not (prefers-reduced-transparency: reduce)) {
+  @media not -moz-pref("arczen.sitemenu-opaque") {
+    panel#link-preview-panel {
+      --arc-lp-bg: var(--arc-lp-bg-acrylic);
+    }
+  }
+}

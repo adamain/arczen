@@ -1,0 +1,18 @@
+# Internal working material: never published.
+backup/
+refs/
+shots/
+tools/
+docs/
+PUBLICATION.md
+
+# Tooling leftovers
+__pycache__/
+*.pyc
+.claude/
+.quality-harness/
+*.bak
+*.orig
+Thumbs.db
+desktop.ini
+.DS_Store

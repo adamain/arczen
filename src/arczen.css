@@ -1,0 +1,21 @@
+/* ArcZen — habillage Arc pour Zen Browser.
+   Principe : piloter les variables natives de Zen plutôt que réécrire son interface.
+   Invariants : pas de sélecteur universel, pas de police embarquée, pas de flou sur les
+   grandes surfaces (seule exception : le fond de la barre de commande / du panneau d'URL,
+   voir commandbar.css, désactivable), animations limitées à transform/opacity. */
+@import "tokens.css";
+@import "window.css";
+@import "sidebar.css";
+@import "compact.css";
+@import "extensions.css";
+@import "tabs.css";
+@import "folders.css";
+@import "commandbar.css";
+@import "sitemenu.css";
+@import "scroll.css";
+@import "pip.css";
+@import "downloads.css";
+@import "littlearc.css";
+@import "glance.css";
+@import "toast.css";
+@import "firefox-extras.css";

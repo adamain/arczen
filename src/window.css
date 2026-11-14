@@ -1,0 +1,260 @@
+/* Fenêtre : police, rangée d'outils, boutons de fenêtre, carte web. */
+
+/* --- Police --- Arc est une app macOS native : son interface est en SF Pro (police système).
+   On l'utilise si elle est installée, sinon Segoe UI Variable. Rien n'est téléchargé.
+
+   SF-Pro.ttf (variable : wght 1-1000, opsz 17-28) installée sous Windows est vue par Gecko
+   comme une famille d'instances nommées : font-weight ne pilote pas l'axe wght (500 rend
+   Regular, 600 rend Bold 700, mesuré au banc). Une @font-face locale (local(), rien n'est
+   téléchargé) qui déclare la plage 1-1000 fait suivre l'axe à font-weight (600 = Semibold
+   réel). Si la police n'est pas installée, la famille est simplement ignorée. */
+@font-face {
+  font-family: "ArcZen SF Pro";
+  src: local("SF Pro"), local("SFPro-Regular");
+  font-weight: 1 1000;
+}
+@media not -moz-pref("arczen.system-font") {
+  :root,
+  menupopup,
+  panel,
+  tooltip {
+    font-family: "ArcZen SF Pro", "SF Pro", "Segoe UI Variable Text", "Segoe UI", sans-serif !important;
+  }
+  /* Nova UI (« Custom font ») impose sa police à chaque élément (`*` + !important) : on lui
+     passe la même pile, sans quoi SF Pro ne s'applique nulle part. */
+  :root {
+    --nova-custom-font-text: "ArcZen SF Pro", "SF Pro", "Segoe UI Variable Text", "Segoe UI", sans-serif !important;
+  }
+  /* Sidebar : coupe « Display » (opsz 28) au lieu de la coupe « Text » (opsz 17) que choisit
+     le dimensionnement optique automatique : hauteur d'x 0,52 em au lieu de 0,53 (rapport
+     x / capitale 0,73 comme Arc au lieu de 0,75). La coupe Display est ≈ 7 % plus étroite :
+     l'interlettrage est relevé pour garder la longueur des mots déjà calée sur Arc.
+     La barre d'URL ouverte (barre de commande) garde le réglage commun. */
+  #navigator-toolbox {
+    font-variation-settings: "opsz" 28;
+    --arc-tracking: 0.026em;
+  }
+  #navigator-toolbox #urlbar:is([breakout-extend], [zen-floating-urlbar]) {
+    font-variation-settings: normal;
+  }
+}
+
+/* --- Rangée d'outils en haut de la sidebar : [feux] [menu] ……… [← → ↻] ---
+   Arc : 34 pt de haut (centre des feux à 20 pt du haut de la fenêtre), flèches au pas de 30 pt,
+   glyphes d'environ 14 pt à 62 % d'opacité, 28 % quand désactivés. */
+:root[zen-single-toolbar="true"] #zen-sidebar-top-buttons {
+  --zen-toolbar-height: var(--arc-toolbar-height) !important;
+}
+#zen-sidebar-top-buttons {
+  & #zen-sidebar-top-buttons-customization-target {
+    justify-content: flex-end;
+  }
+  & #PanelUI-button {
+    margin-inline-end: auto !important;
+  }
+  & .toolbarbutton-1 {
+    --toolbarbutton-icon-fill: var(--arc-fg-icon) !important;
+  }
+  & .toolbarbutton-1:hover {
+    --toolbarbutton-icon-fill: var(--arc-fg-icon-hover) !important;
+  }
+  & .toolbarbutton-1[disabled] {
+    --toolbarbutton-icon-fill: var(--arc-fg-off) !important;
+  }
+  /* Survol d'Arc : voile blanc ≈ 10 % (noir 7 % en clair), carré de 26 pt centré sur le glyphe,
+     coin continu (règle de tokens.css). L'emprise reste de 28 pt grâce à 1 pt de marge. */
+  & .toolbarbutton-1 {
+    /* Noms de Firefox 159 (toolbarbuttons.css) ; Zen y met un gris e2e2e2 à 7 %. */
+    --toolbarbutton-background-color-hover: var(--arc-hover-bg) !important;
+    --toolbarbutton-background-color-active: var(--arc-active-bg) !important;
+    --toolbarbutton-border-radius: var(--arc-radius-btn) !important;
+  }
+  & :is(#back-button, #forward-button, #reload-button, #stop-button) > .toolbarbutton-icon {
+    box-sizing: border-box !important;
+    width: calc(26px * var(--arc-scale)) !important;
+    height: calc(26px * var(--arc-scale)) !important;
+    margin: calc(1px * var(--arc-scale)) !important;
+    padding: calc(6px * var(--arc-scale)) !important;
+    border-radius: var(--arc-radius-btn) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+  }
+  /* Glyphes d'Arc (retour-4/10, 2,04 px/pt) : flèches de 10,8 pt, branches à 48°, trait
+     1,42 pt ; ↻ : cercle de 5,3 pt de rayon (trait 1,37) ouvert en haut à droite, chevron au
+     sommet. Dessinés dans une boîte de 18 pt et posés en masque sur un ::before (le fond de
+     survol reste sur l'icône, que le masque effacerait) : la teinte suit
+     --toolbarbutton-icon-fill (repos, survol, désactivé). */
+  & :is(#back-button, #forward-button, #reload-button) {
+    position: relative !important;
+    & > .toolbarbutton-icon {
+      list-style-image: none !important;
+    }
+    &::before {
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 !important;
+      margin: auto !important;
+      width: var(--arc-icon-nav) !important;
+      height: var(--arc-icon-nav) !important;
+      background-color: var(--toolbarbutton-icon-fill) !important;
+      mask: center / 100% 100% no-repeat var(--arc-nav-glyph) !important;
+      pointer-events: none !important;
+    }
+  }
+  & #back-button {
+    --arc-nav-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='none' stroke='black' stroke-width='1.42' stroke-linecap='round' stroke-linejoin='round'><path d='M7.77 4.34 3.58 9l4.19 4.66M3.58 9h10.84'/></svg>");
+  }
+  & #forward-button {
+    --arc-nav-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='none' stroke='black' stroke-width='1.42' stroke-linecap='round' stroke-linejoin='round'><path d='M10.23 4.34 14.42 9l-4.19 4.66M14.42 9H3.58'/></svg>");
+  }
+  & #reload-button {
+    --arc-nav-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='none' stroke='black' stroke-width='1.37' stroke-linecap='round' stroke-linejoin='round'><path d='M14.29 9.78A5.29 5.29 0 1 1 9 4.76h2.16M8.9 1.67l2.26 3.04-2.01 3.06'/></svg>");
+  }
+}
+
+/* --- Bouton de barre latérale d'Arc à la place du « ··· » de Zen ---
+   Arc (08-arc-sidebar-flottante.png, 1,90 px/pt) : rectangle arrondi à colonne gauche de
+   16,6 × 12,4 pt, trait 1,15 pt, rayon ≈ 2,6 pt, cloison à 5,5 pt du bord, trois tirets ;
+   même teinte que les flèches ; centre à 24,3 pt du centre du troisième feu (10,5 pt entre
+   le feu et l'icône), sur l'axe des feux. Zone de survol de 28 pt comme les flèches.
+   Le bouton reste #PanelUI-menu-button (arczen.uc.js : clic = bascule du mode compact,
+   clic droit = menu de Zen) ; l'icône n'est remplacée que si le script tourne
+   (arczen-sidebar-btn) et seulement dans la disposition où le bouton jouxte les feux :
+   barre unique, sidebar dépliée. Mêmes conditions dans le script. */
+@media not -moz-pref("arczen.native-menu-button") {
+  :root[arczen-sidebar-btn][zen-single-toolbar="true"][zen-sidebar-expanded="true"] #zen-sidebar-top-buttons #PanelUI-menu-button {
+    & > .toolbarbutton-badge-stack {
+      /* Même carré de survol que les flèches : 26 pt + 1 pt de marge, coin continu. */
+      box-sizing: border-box !important;
+      width: calc(26px * var(--arc-scale)) !important;
+      height: calc(26px * var(--arc-scale)) !important;
+      margin: calc(1px * var(--arc-scale)) !important;
+      padding: calc(6.8px * var(--arc-scale)) calc(4.7px * var(--arc-scale)) !important;
+      border-radius: var(--arc-radius-btn) !important;
+      corner-shape: var(--arc-corner-shape) !important;
+    }
+    & > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+      width: calc(16.6px * var(--arc-scale)) !important;
+      height: calc(12.4px * var(--arc-scale)) !important;
+      /* Un SVG data: n'a pas droit à context-fill (rendu noir, vérifié au banc) : il sert de
+         masque à un aplat de la teinte des icônes voisines (survol et désactivé compris). */
+      list-style-image: none !important;
+      background-color: var(--toolbarbutton-icon-fill) !important;
+      mask: center / 100% 100% no-repeat url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16.6 12.4'><path fill-rule='evenodd' d='M2.6 0H14a2.6 2.6 0 0 1 2.6 2.6v7.2A2.6 2.6 0 0 1 14 12.4H2.6A2.6 2.6 0 0 1 0 9.8V2.6A2.6 2.6 0 0 1 2.6 0zM2.6 1.15H14a1.45 1.45 0 0 1 1.45 1.45v7.2A1.45 1.45 0 0 1 14 11.25H2.6A1.45 1.45 0 0 1 1.15 9.8V2.6A1.45 1.45 0 0 1 2.6 1.15z'/><rect x='4.95' y='1' width='1.15' height='10.4'/><rect x='1.85' y='2.78' width='2.1' height='.85' rx='.425'/><rect x='1.85' y='4.53' width='2.1' height='.85' rx='.425'/><rect x='1.85' y='6.28' width='2.1' height='.85' rx='.425'/></svg>") !important;
+    }
+  }
+  /* Écart au troisième feu : 10,5 pt (zone de survol comprise : 18,8 pt jusqu'au centre).
+     Sans ce retrait, la marge des feux (6 pt) mettrait le centre à 20 pt, plus le pixel de
+     rembourrage que Zen donne à la rangée dans le panneau compact. */
+  @media not -moz-pref("arczen.native-window-controls") {
+    :root[arczen-sidebar-btn][zen-single-toolbar="true"][zen-sidebar-expanded="true"] #zen-sidebar-top-buttons #PanelUI-button {
+      margin-inline-start: calc(-1.2px * var(--arc-scale)) !important;
+    }
+    :root[arczen-sidebar-btn][zen-single-toolbar="true"][zen-sidebar-expanded="true"][zen-compact-mode="true"] #zen-sidebar-top-buttons #PanelUI-button {
+      margin-inline-start: calc(-1.2px * var(--arc-scale) - 1px) !important;
+    }
+  }
+}
+
+/* --- Feux façon macOS, à gauche ---
+   Au repos (comme Arc) : disque gris (96, 96, 95 en sombre) et liseré de 0,5 pt teinté.
+   Au survol du groupe : les trois couleurs pleines et les glyphes de macOS.
+   Ø 12 pt, pas de 20 pt ; centre du premier feu à (17,4 ; 20,5) pt du coin du panneau compact.
+   Tailles et écarts suivent --arc-scale.
+
+   Survol de groupe : Firefox donne aux boutons et à leur boîte une apparence native
+   (-moz-window-button-*, -moz-window-button-box) qui, sous Windows, en fait des zones de
+   légende non clientes (HTCLOSE, HTMINBUTTON, HTMAXBUTTON pour les « snap layouts »), et la
+   barre de titre hérite de -moz-window-dragging: drag (interstices = zone de glissement).
+   Sur ces zones, Windows ne transmet plus la souris au contenu : le :hover du groupe tombe et
+   seul le bouton dont Windows émule l'état (agrandir) réagit. On retire toute apparence native
+   et toute zone de glissement du groupe ; la boîte reçoit une marge de survol continue
+   (rembourrage compensé par une marge négative : la mise en page ne bouge pas). */
+@media not -moz-pref("arczen.native-window-controls") {
+  #zen-sidebar-top-buttons .titlebar-buttonbox-container {
+    order: -1000 !important;
+    /* Zen place la rangée à 5 px fixes du coin du panneau (rembourrage de la sidebar) :
+       on les retranche pour que le centre du premier feu tombe à (17,4 ; 20,5) × échelle. */
+    margin: 0 calc(6px * var(--arc-scale)) 0 calc(11.4px * var(--arc-scale) - 5px) !important;
+    align-items: center !important;
+    -moz-window-dragging: no-drag !important;
+  }
+  /* Hauteur : seulement dans le panneau compact (en mode normal, la rangée reste centrée).
+     Toute la rangée (feux, bouton de barre latérale, flèches) monte d'autant : un seul axe
+     horizontal pour tous les centres. Arrondi au demi-pixel pour que les glyphes restent
+     calés sur les pixels physiques (devPixelsPerPx 2). */
+  :root[zen-compact-mode="true"] #zen-sidebar-top-buttons {
+    & .titlebar-buttonbox-container,
+    & #zen-sidebar-top-buttons-customization-target {
+      translate: 0 round(nearest, calc(3.5px * var(--arc-scale) - 5px), 0.5px);
+    }
+  }
+  #zen-sidebar-top-buttons .titlebar-buttonbox {
+    appearance: none !important;
+    -moz-window-dragging: no-drag !important;
+    gap: calc(8px * var(--arc-scale));
+    align-items: center;
+    padding: calc(4px * var(--arc-scale)) !important;
+    margin: calc(-4px * var(--arc-scale)) !important;
+  }
+  #zen-sidebar-top-buttons .titlebar-button {
+    --arc-light: #ff5f57;
+    --arc-glyph: none;
+    appearance: none !important;
+    -moz-window-dragging: no-drag !important;
+    box-sizing: border-box !important;
+    width: calc(12px * var(--arc-scale)) !important;
+    min-width: calc(12px * var(--arc-scale)) !important;
+    height: calc(12px * var(--arc-scale)) !important;
+    min-height: calc(12px * var(--arc-scale)) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0.5px solid color-mix(in srgb, var(--arc-light) 30%, transparent) !important;
+    border-radius: 50% !important;
+    corner-shape: round !important;
+    background-color: light-dark(rgb(208, 208, 207), rgb(96, 96, 95)) !important;
+    background-clip: border-box !important;
+    background-origin: border-box !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    list-style-image: none !important;
+    color: transparent !important;
+
+    /* Glyphes de macOS (viewBox 12) : sombres semi-transparents, vectoriels donc nets à toute échelle. */
+    &.titlebar-close {
+      order: 1;
+      --arc-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3.75 3.75l4.5 4.5M8.25 3.75l-4.5 4.5' stroke='rgba(0,0,0,0.55)' stroke-width='1.1' stroke-linecap='round' fill='none'/></svg>");
+    }
+    &.titlebar-min {
+      order: 2;
+      --arc-light: #febc2e;
+      --arc-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3.2 6h5.6' stroke='rgba(0,0,0,0.55)' stroke-width='1.2' stroke-linecap='round' fill='none'/></svg>");
+    }
+    &.titlebar-max,
+    &.titlebar-restore {
+      order: 3;
+      --arc-light: #28c840;
+      --arc-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3.5 3.5h3.6L3.5 7.1z M8.5 8.5H4.9L8.5 4.9z' fill='rgba(0,0,0,0.55)'/></svg>");
+    }
+    & > .toolbarbutton-icon,
+    & > .toolbarbutton-text {
+      display: none !important;
+    }
+  }
+  #zen-sidebar-top-buttons .titlebar-buttonbox:hover > .titlebar-button {
+    background-color: var(--arc-light) !important;
+    background-image: var(--arc-glyph) !important;
+    border-color: color-mix(in srgb, var(--arc-light) 80%, black) !important;
+  }
+  #zen-sidebar-top-buttons .titlebar-buttonbox > .titlebar-button:hover:active {
+    border-color: color-mix(in srgb, var(--arc-light) 60%, black) !important;
+    background-color: color-mix(in srgb, var(--arc-light) 80%, black) !important;
+  }
+  :root:-moz-window-inactive #zen-sidebar-top-buttons .titlebar-buttonbox:not(:hover) > .titlebar-button {
+    /* (le texte du bouton est transparent : currentColor donnerait un feu invisible) */
+    background-color: color-mix(in srgb, var(--arc-fg) 18%, transparent) !important;
+    border-color: transparent !important;
+  }
+}

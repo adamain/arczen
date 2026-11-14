@@ -1,0 +1,263 @@
+/* Onglets : hauteur, typographie, états.
+   Arc : pastille de 32 pt au pas de 36, libellé 13 pt Regular à 86 %, favicon à 7,7 pt du bord
+   de la pastille, libellé à 32,9 pt du bord. */
+
+#tabbrowser-tabs {
+  font-size: var(--arc-font-tab) !important;
+  letter-spacing: var(--arc-tracking) !important;
+  --tab-margin-block: calc(var(--arc-tab-gap) / 2) !important;
+}
+
+#tabbrowser-tabs .tabbrowser-tab .tab-label {
+  color: var(--arc-fg-tab) !important;
+}
+
+/* Contraste fond ↔ onglet actif, calibré sur Arc (captures retour-5, fond 9 → onglet actif 57,
+   survol 33) : en sombre, voile blanc de 20 % (actif) et 10 % (survol) posé sur le fond du thème,
+   donc dérivé de ses couleurs ; Zen mettait 18 % mêlé à 5 % de couleur primaire (≈ 17,7 % mesurés)
+   et 7 % au survol. On garde une pointe de la couleur primaire du thème (3 %) comme Zen.
+   En clair : valeurs de Zen inchangées (pastille presque blanche, survol noir à 7 %).
+   Portée : les onglets des espaces (zen-workspace) ; les essentials ont leurs propres teintes. */
+zen-workspace {
+  --tab-background-color-selected: light-dark(
+    color-mix(in srgb, rgba(255, 255, 255, 0.8) 98%, var(--zen-primary-color)),
+    color-mix(in srgb, rgba(255, 255, 255, 0.185) 97%, var(--zen-primary-color))
+  ) !important;
+  --tab-background-color-hover: light-dark(rgba(16, 16, 16, 0.07), rgba(255, 255, 255, 0.1)) !important;
+}
+
+/* Coins des pastilles : rayon d'Arc (10 pt, cercle mesuré) × coefficient de la superellipse. */
+#tabbrowser-tabs .tabbrowser-tab:not([zen-essential="true"]) > .tab-stack > .tab-background,
+#tabs-newtab-button:not([in-urlbar="true"]) {
+  border-radius: calc(var(--arc-radius) * var(--arc-corner-k)) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+}
+
+#tabbrowser-tabs .tabbrowser-tab:not([zen-essential="true"]) :is(.tab-icon-image, .tab-throbber, .tab-icon-pending, .tab-sharing-icon-overlay) {
+  width: var(--arc-icon) !important;
+  height: var(--arc-icon) !important;
+}
+
+/* Colonnes favicon / libellé, sidebar dépliée seulement (repliée, Zen centre les icônes).
+   Arc (retour-5) : favicon de 16 pt à 7,7 pt du bord de la pastille, libellé à 32,9 pt. */
+:root[zen-sidebar-expanded="true"] #tabbrowser-tabs .tabbrowser-tab:not([zen-essential="true"]) {
+  /* Zen ajoute des marges fixes (favicon 3,33 px, pile d'icônes 10 px) et la pastille est en
+     retrait de 2 pt sur .tab-content : on les compense pour que les deux colonnes suivent
+     l'échelle (vérifié à 100 et 125 % : favicon 7,7 pt, libellé 32,9 pt). */
+  & .tab-content {
+    padding-inline-start: calc(9.7px * var(--arc-scale) - 3.33px) !important;
+  }
+  & .tab-label-container {
+    margin-inline-start: calc(9.2px * var(--arc-scale) - 10px) !important;
+  }
+  /* Épinglé dont l'adresse a changé : Zen sort la pile d'icônes du flux à 8 px fixes ;
+     on la remet sur la colonne des favicons. */
+  &[zen-pinned-changed="true"] > .tab-stack > .tab-content > .tab-icon-stack {
+    left: calc(9.7px * var(--arc-scale) - 3.33px) !important;
+  }
+}
+
+/* Croix de fermeture : glyphe plus petit et estompé, comme Arc */
+#tabbrowser-tabs .tabbrowser-tab .tab-close-button {
+  fill: var(--arc-fg-icon) !important;
+  &:hover {
+    fill: var(--arc-fg-icon-hover) !important;
+  }
+}
+
+/* Ligne « New Tab » estompée, comme dans Arc : « + » à 50 %, libellé à 45 % (retour-5). */
+#tabs-newtab-button:not([in-urlbar="true"]) {
+  color: var(--arc-fg-dim) !important;
+  font-size: var(--arc-font-tab) !important;
+  & > .toolbarbutton-text {
+    color: color-mix(in srgb, var(--arc-fg) 45%, transparent) !important;
+  }
+  &:hover,
+  &:hover > .toolbarbutton-text {
+    color: var(--arc-fg-icon-hover) !important;
+  }
+}
+/* « + » centré sur la colonne des favicons, libellé dans celle des titres. Arc : glyphe de
+   10,1 pt (le dessin de Zen occupe 72 % de sa boîte, d'où une boîte de 14 pt). */
+:root[zen-sidebar-expanded="true"] #tabs-newtab-button:not([in-urlbar="true"]) {
+  /* Marges fixes de Zen compensées (icône 2 px de chaque côté, texte 7,5 px) : centre du « + »
+     à 15,7 pt du bord (axe des favicons), texte à 32,9 pt, à toutes les échelles. */
+  padding-inline-start: calc(8.7px * var(--arc-scale) - 2px) !important;
+  & > .toolbarbutton-icon {
+    width: calc(14px * var(--arc-scale)) !important;
+    height: calc(14px * var(--arc-scale)) !important;
+  }
+  & > .toolbarbutton-text {
+    margin-inline-start: calc(10.2px * var(--arc-scale) - 9.5px) !important;
+  }
+}
+
+/* En-têtes de section du rangement « Tidy » (arczen.uc.js) : aucun élément n'est inséré dans la
+   liste ; le premier onglet de chaque section (« arczen-section-label ») réserve une marge
+   au-dessus de lui et y dessine le nom en ::before, aligné sur la colonne des favicons
+   (9,7 pt × échelle du bord de l'onglet). Le clone servant d'image de glisser est exclu. */
+:root[zen-sidebar-expanded="true"] #tabbrowser-tabs .tabbrowser-tab[arczen-section-label]:not([drag-image], [pinned]) {
+  --arczen-section-h: calc(26px * var(--arc-scale));
+  margin-top: var(--arczen-section-h) !important;
+
+  &::before {
+    content: attr(arczen-section-label);
+    position: absolute;
+    inset-inline: calc(9.7px * var(--arc-scale)) calc(8px * var(--arc-scale));
+    bottom: 100%;
+    box-sizing: border-box;
+    height: var(--arczen-section-h);
+    padding-top: calc(9px * var(--arc-scale));
+    font-size: var(--arc-font-small);
+    line-height: calc(15px * var(--arc-scale));
+    font-weight: 500;
+    letter-spacing: var(--arc-tracking);
+    color: var(--arc-fg-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+}
+
+/* Boutons d'une section (arczen.uc.js) : la croix (fermer ses onglets) et, à sa gauche,
+   « retirer la section » (garder ses onglets). Une seule paire, hors de la liste, posée en
+   position fixe au bout droit de l'intertitre survolé ; fondu de 120 ms (opacity seule). La
+   croix a l'icône et les couleurs de la croix d'un onglet ; « retirer » est un cadre en
+   pointillés (section défaite), dessiné en masque dans la même couleur. */
+.arczen-section-btn {
+  appearance: none !important;
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  box-sizing: border-box !important;
+  width: calc(18px * var(--arc-scale)) !important;
+  height: calc(18px * var(--arc-scale)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: calc(5px * var(--arc-scale) * var(--arc-corner-k)) !important;
+  background: url("chrome://browser/skin/zen-icons/close.svg") center / calc(12px * var(--arc-scale)) no-repeat !important;
+  -moz-context-properties: fill, fill-opacity !important;
+  fill: var(--arc-fg-icon) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 120ms linear !important;
+
+  &[arczen-show] {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  &:hover {
+    fill: var(--arc-fg-icon-hover) !important;
+    background-color: var(--arc-hover-bg) !important;
+  }
+  & > .toolbarbutton-icon,
+  & > .toolbarbutton-text {
+    display: none !important;
+  }
+}
+#arczen-section-ungroup {
+  background-image: none !important;
+  color: var(--arc-fg-icon) !important;
+
+  &::before {
+    content: "" !important;
+    display: block !important;
+    width: calc(12px * var(--arc-scale)) !important;
+    height: calc(12px * var(--arc-scale)) !important;
+    margin: auto !important;
+    background: currentColor !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.75' y='2.75' width='12.5' height='10.5' rx='2.5' fill='none' stroke='black' stroke-width='1.5' stroke-dasharray='3 2.25'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  }
+  &:hover {
+    color: var(--arc-fg-icon-hover) !important;
+  }
+}
+
+/* Fin de section : le premier onglet sans section qui suit une section (« arczen-section-end »)
+   s'écarte d'un tiers de la hauteur d'un intertitre ; pas de trait. */
+:root[zen-sidebar-expanded="true"] #tabbrowser-tabs .tabbrowser-tab[arczen-section-end]:not([drag-image], [pinned], [arczen-section-label]) {
+  margin-top: calc(26px / 3 * var(--arc-scale)) !important;
+}
+
+/* --- Glisser-déposer d'onglets (ZenDragAndDrop.js de Zen 1.24) ---
+   Ligne d'insertion (div#zen-drag-indicator, recréée à chaque glisser) : sans le rond de Zen,
+   sur toute la largeur que Zen calcule, en bout arrondi, couleur du texte à 65 %. Elle glisse
+   d'une position à l'autre en 100 ms (transform seul). */
+#zen-drag-indicator {
+  --zen-drag-indicator-height: calc(2px * var(--arc-scale)) !important;
+  --zen-drag-indicator-bg: color-mix(in srgb, var(--arc-fg) 65%, transparent) !important;
+  border-radius: calc(1px * var(--arc-scale)) !important;
+
+  &::before {
+    display: none !important;
+  }
+  &[orientation="horizontal"] {
+    transform: translate(var(--indicator-left, 0px), calc(var(--indicator-top, 0px) - var(--zen-drag-indicator-height) / 2)) !important;
+    width: var(--indicator-width) !important;
+    transition: transform 100ms var(--arc-ease) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #zen-drag-indicator[orientation="horizontal"] {
+    transition: none !important;
+  }
+}
+
+/* Image de glisser (clone de l'onglet, attribut drag-image) : Zen la force en schéma clair sous
+   Windows ; on garde le thème, avec une pastille opaque, un liseré et une ombre statique qui
+   tient dans l'écart entre onglets. Windows ajoute encore sa propre transparence à l'image. */
+#tabbrowser-tabs .tabbrowser-tab[drag-image]:not([zen-essential="true"]) {
+  color-scheme: inherit !important;
+  --tab-text-color-selected: var(--arc-fg) !important;
+
+  & > .tab-stack > .tab-background {
+    background: light-dark(rgb(255, 255, 255), rgb(58, 58, 60)) !important;
+    box-shadow: 0 0 0 0.5px var(--arc-cmd-ring-out), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* Pendant le glisser : l'onglet d'origine reste en place, estompé (sur .tab-stack, l'onglet
+   lui-même porte les transitions de Zen), et revient en fondu de 150 ms au dépôt, pendant que
+   Zen anime la descente des onglets (100 ms). « Tidy | Clear » s'efface (fondu natif de Zen,
+   150 ms) pour ne pas se mêler à l'image de glisser. */
+#tabbrowser-tabs .tabbrowser-tab:not([drag-image]) > .tab-stack {
+  transition: opacity 150ms var(--arc-ease);
+}
+#tabbrowser-tabs[movingtab] .tabbrowser-tab:is([visuallyselected], [multiselected]):not([drag-image], [zen-essential="true"]) > .tab-stack {
+  opacity: 0.35 !important;
+}
+#navigator-toolbox[movingtab] .pinned-tabs-container-separator > :is(.arczen-tidy-button, .zen-workspace-close-unpinned-tabs-button) {
+  opacity: 0 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #tabbrowser-tabs .tabbrowser-tab > .tab-stack {
+    transition: none;
+  }
+}
+
+/* Libellé de dossier : même corps et même graisse qu'un onglet (Zen le met en 600). */
+zen-folder > .tab-group-label-container > .tab-group-label {
+  font-size: var(--arc-font-tab) !important;
+  font-weight: normal !important;
+  color: var(--arc-fg-tab) !important;
+}
+
+/* Icône de dossier dans la colonne des favicons (sidebar dépliée).
+   Le dessin de Zen occupe 23,8 px de large dans une boîte de 28 : la boîte passe à
+   --arc-icon × 28 / 23,8 pour que le dossier fasse la largeur d'un favicon, et son centre
+   est posé sur celui du favicon (17,7 px × échelle depuis le bord de l'onglet, voir les
+   colonnes ci-dessus ; +1 px compense le translate(-1px) de Zen sur le svg). Centrage vertical natif. */
+:root[zen-sidebar-expanded="true"] zen-folder > .tab-group-label-container .tab-group-folder-icon {
+  --arczen-folder-box: calc(var(--arc-icon) * 1.176);
+  width: var(--arczen-folder-box) !important;
+  height: var(--arczen-folder-box) !important;
+  left: calc(17.7px * var(--arc-scale) - var(--arczen-folder-box) / 2 + 1px) !important;
+
+  & svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}

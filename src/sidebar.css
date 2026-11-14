@@ -1,0 +1,362 @@
+/* Sidebar : marges, pilule d'URL, tuiles Favorites, titre d'espace, pied. */
+
+#navigator-toolbox {
+  --border-radius-medium: var(--arc-radius) !important;
+}
+
+/* --- Pilule d'URL --- Arc : 32 pt de haut, texte 12 pt Regular à 61 %.
+   Les hauteurs sont posées en ligne par Zen (JS) : on les surcharge hors barre flottante.
+   La barre de commande flottante (commandbar.css) garde la main grâce à sa spécificité. */
+:root[zen-single-toolbar="true"] #nav-bar {
+  --zen-toolbar-height: calc(var(--arc-url-height) + 2px) !important;
+}
+:root[zen-single-toolbar="true"] #nav-bar #urlbar-container {
+  --urlbar-container-height: calc(var(--arc-url-height) + 2px) !important;
+}
+:root[zen-single-toolbar="true"] #urlbar:not([breakout-extend], [zen-floating-urlbar]) {
+  /* Zen dessine le fond 1 px à l'intérieur de #urlbar : +2 px pour une pilule de 32. */
+  --urlbar-height: calc(var(--arc-url-height) + 2px) !important;
+  --urlbar-min-height: calc(var(--arc-url-height) + 2px) !important;
+}
+:root[zen-single-toolbar="true"] #urlbar:not([breakout-extend]) {
+  font-size: var(--arc-font-small) !important;
+
+  /* Arc : texte à 11,6 pt du bord gauche de la pilule (le conteneur a 4 px de rembourrage). */
+  & .urlbar-input-box {
+    margin-inline-start: calc(11.6px * var(--arc-scale) - 4px) !important;
+  }
+  /* Coin continu d'Arc (A10 : équivalent d'un cercle de 10,5 pt) ; fond blanc ≈ 10 % de Zen gardé. */
+  & .urlbar-background {
+    border-radius: var(--arc-radius-pill) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+  }
+  & .urlbar-input {
+    letter-spacing: var(--arc-tracking) !important;
+    font-weight: 400 !important;
+    color: var(--arc-fg-url) !important;
+  }
+}
+
+/* Comme Arc : la pilule ne montre que le lien et les contrôles du site, et la barre
+   ouverte (barre de commande, panneau d'URL) n'affiche pas non plus zoom ni traduction. */
+@media not -moz-pref("arczen.urlbar-full-actions") {
+  :root[zen-single-toolbar="true"] #urlbar,
+  #urlbar[zen-floating-urlbar="true"] {
+    & #urlbar-zoom-button,
+    & #translations-button {
+      display: none !important;
+    }
+  }
+}
+
+/* --- Tuiles Favorites (Essentials) --- Arc : 40 pt de haut, coin continu équivalent à un
+   cercle de 10,7 pt (retour-3/08) ; voir la règle des coins dans tokens.css. */
+#zen-essentials {
+  --tab-min-height: var(--arc-tile-height) !important;
+}
+#zen-essentials .tabbrowser-tab[zen-essential="true"] .tab-background {
+  border-radius: var(--arc-radius-tile) !important;
+  corner-shape: var(--arc-corner-shape) !important;
+}
+
+/* Favori actif : anneau et teinte tirés du favicon, comme dans Arc.
+   C'est l'effet natif de Zen (favicon agrandi et flouté derrière la tuile) ; l'option
+   « nouveaux onglets » de Nova le remplaçait par un aplat. On le rétablit, avec un
+   voile plus léger pour que la couleur du site teinte toute la tuile. */
+#zen-essentials .tabbrowser-tab[zen-essential="true"][visuallyselected] > .tab-stack > .tab-background {
+  background: transparent !important;
+
+  &::after {
+    background: var(--zen-essential-tab-icon) center / contain no-repeat !important;
+  }
+  &::before {
+    background: light-dark(rgba(255, 255, 255, 0.6), rgba(54, 54, 54, 0.72)) !important;
+    margin: 2px !important;
+    border-radius: calc(var(--arc-radius-tile) - 2px) !important;
+    corner-shape: var(--arc-corner-shape) !important;
+  }
+}
+
+/* --- Titre de l'espace --- Arc : 12 pt semi-gras à 50 %, icône dans la colonne des favicons,
+   texte dans la colonne des libellés. */
+:root[zen-sidebar-expanded="true"] .zen-current-workspace-indicator {
+  --zen-workspace-indicator-height: calc(36px * var(--arc-scale)) !important;
+  /* Icône sur la colonne des favicons, texte sur la colonne des libellés (mesuré au banc). */
+  /* Favicon d'onglet : rembourrage de la sidebar + 9,7 × échelle (tabs.css, marges fixes de Zen
+     compensées) ; libellé : 9,2 × échelle après l'icône de 16 pt. */
+  --indicator-gap: calc(9.2px * var(--arc-scale)) !important;
+  padding-inline-start: calc(var(--zen-toolbox-padding, 5px) + 9.7px * var(--arc-scale)) !important;
+  gap: var(--indicator-gap) !important;
+
+  /* Icône (image, emoji) et chevron au format des favicons. */
+  & .zen-current-workspace-indicator-stack,
+  & .zen-current-workspace-indicator-icon,
+  & .zen-current-workspace-indicator-icon > img,
+  & .zen-current-workspace-indicator-chevron {
+    width: var(--arc-icon) !important;
+    height: var(--arc-icon) !important;
+    min-width: var(--arc-icon) !important;
+    min-height: var(--arc-icon) !important;
+    padding: 0 !important;
+    margin-block: 0 !important;
+    box-sizing: border-box !important;
+  }
+  & .zen-current-workspace-indicator-icon {
+    font-size: var(--arc-icon) !important;
+    line-height: 1 !important;
+    justify-content: center;
+    align-items: center;
+  }
+  & .zen-current-workspace-indicator-icon > img {
+    translate: none !important;
+    transform: none !important;
+  }
+  & .zen-current-workspace-indicator-chevron {
+    padding: calc(1px * var(--arc-scale)) !important;
+  }
+  /* Sans icône : le texte reprend la place de l'icône (comme Zen, à l'échelle). */
+  & .zen-current-workspace-indicator-stack[no-icon] {
+    margin-inline-end: calc(-1 * (var(--indicator-gap) + var(--arc-icon))) !important;
+  }
+}
+.zen-current-workspace-indicator {
+  & .zen-current-workspace-indicator-name {
+    font-size: var(--arc-font-title) !important;
+    letter-spacing: var(--arc-tracking) !important;
+    font-weight: 600 !important;
+    /* Arc (retour-5) : « INTERNET » à 45 % du blanc sur le fond (120 sur 9). */
+    color: color-mix(in srgb, var(--arc-fg) 45%, transparent) !important;
+    /* Centre du texte sur le centre de l'icône (retour-6) : la boîte de ligne y est déjà centrée.
+       Balayage au banc (dpr 2, titre en capitales et emoji globe) : sans décalage, encre des capitales
+       centrée sur l'encre de l'icône à 125 % et à 0,5 px physique près à 100 % (le texte est
+       calé au demi-pixel ; tout décalage ≥ 0,25 px éloigne l'un des deux). À l'œil pourtant, le
+       titre paraissait trop haut face à l'emoji (retour du 14/11/2026) : baissé de 1 pt. */
+    translate: 0 calc(1px * var(--arc-scale)) !important;
+  }
+}
+
+/* --- Séparateur épinglés / onglets du jour, « Tidy | Clear » ---
+   Arc (retour-5, pt × échelle) : rangée de 22 pt (centre du titre → filet 28,7 pt, filet →
+   haut de « New Tab » 13,2 pt). Filet de 1 pt à 7 %, de 8,8 pt après le bord gauche des
+   pastilles jusqu'à 8,3 pt avant le balai. Balai 7 × 10,5 pt, 6 pt avant « Tidy » ; « Tidy »
+   et « Clear » en 9 pt semi-gras, séparés par un trait vertical de 11,4 pt à 15 % (7,5 pt
+   après « Tidy », 9,5 pt avant « Clear ») ; « Clear » finit à 9,6 pt du bord droit des
+   pastilles. Au repos les deux libellés sont à 30 %, au survol à 80 %.
+   Les deux boutons restent visibles (commandes d'Arc, sans survol à deviner) ; « Tidy » n'est
+   inséré qu'à partir de N onglets du jour (arczen.uc.js, réglage « arczen.tidy-min-tabs »).
+   Zen règle déjà : rangée masquée sans onglet du jour ([hide-separator]), boutons masqués
+   sidebar repliée, séparateur masqué dans une fenêtre non synchronisée. */
+.pinned-tabs-container-separator {
+  position: relative;
+  height: calc(22px * var(--arc-scale)) !important;
+  /* 2 pt : écart entre le bord du séparateur et celui des pastilles d'onglet (mesuré à 100 et 125 %). */
+  padding-inline: 0 calc(2px * var(--arc-scale)) !important;
+  --arczen-sep-fg: color-mix(in srgb, var(--arc-fg) 30%, transparent);
+  --arczen-sep-fg-hover: color-mix(in srgb, var(--arc-fg) 80%, transparent);
+
+  .zen-workspace-pinned-tabs-section[hide-separator] > & {
+    height: 0 !important;
+    opacity: 0 !important;
+  }
+
+  & toolbarseparator {
+    flex: 1 !important;
+    height: 1px !important;
+    border: 0 !important;
+    background-color: var(--arc-line) !important;
+    margin-block: auto !important;
+    margin-inline: calc(11px * var(--arc-scale)) !important;
+    transform-origin: left center;
+    transition: background-color 250ms var(--arc-ease);
+    :root[zen-sidebar-expanded="true"] & {
+      margin-inline: calc((2px + 8.8px) * var(--arc-scale)) 0 !important;
+    }
+    /* Ondulation pendant Tidy (posée par arczen.uc.js, qui anime translate et scale du ::before) :
+       sinusoïde de 10 pt de période, 2,2 pt d'amplitude, trait de 0,9 pt (vidéo Arc mesurée
+       image par image). Tuile de 24 périodes pour éviter les raccords ; le ::before dépasse
+       d'une période à droite et défile d'une période vers la gauche, rogné par clip-path. */
+    &[arczen-wave] {
+      position: relative;
+      clip-path: inset(calc(-4px * var(--arc-scale)) 0);
+      &::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: 0;
+        top: 50%;
+        width: calc(100% + 10px * var(--arc-scale));
+        height: calc(6px * var(--arc-scale));
+        margin-top: calc(-3px * var(--arc-scale));
+        background-color: var(--arc-line);
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 6'%3E%3Cpath d='M-5 3q2.5-4.5 5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0t5 0' fill='none' stroke='black' stroke-width='0.9'/%3E%3C/svg%3E")
+          0 0 / calc(240px * var(--arc-scale)) 100% repeat-x;
+        pointer-events: none;
+      }
+    }
+    &[arczen-wave="run"] {
+      background-color: transparent !important;
+    }
+  }
+
+  & > :is(.arczen-tidy-button, .zen-workspace-close-unpinned-tabs-button) {
+    pointer-events: auto !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    padding-block: 0 !important;
+    min-width: 0 !important;
+    font-size: calc(9px * var(--arc-scale)) !important;
+    font-weight: 600 !important;
+    letter-spacing: var(--arc-tracking) !important;
+    color: var(--arczen-sep-fg) !important;
+    background: none !important;
+    transition: color var(--arc-dur) var(--arc-ease);
+
+    & > :is(.toolbarbutton-icon, .toolbarbutton-text) {
+      opacity: 1 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    &:hover {
+      --arczen-sep-fg: var(--arczen-sep-fg-hover);
+    }
+  }
+
+  /* Tidy : balai (dessin d'après la capture, 16 × 24 px à 2,28 px/pt) puis libellé, et le
+     trait vertical dessiné en fond au bord droit. */
+  & > .arczen-tidy-button {
+    gap: calc(6.1px * var(--arc-scale)) !important;
+    padding-inline: calc(8.3px * var(--arc-scale)) calc(7.5px * var(--arc-scale)) !important;
+    background: linear-gradient(var(--arczen-divider), var(--arczen-divider)) right center /
+      1px calc(11.4px * var(--arc-scale)) no-repeat !important;
+    --arczen-divider: color-mix(in srgb, var(--arc-fg) 15%, transparent);
+
+    & > .toolbarbutton-icon {
+      width: calc(7px * var(--arc-scale)) !important;
+      height: calc(10.5px * var(--arc-scale)) !important;
+      /* Un SVG data: n'a pas droit à context-fill (rendu noir) : il sert de masque sur un fond
+         currentColor, comme ailleurs dans ArcZen. */
+      list-style-image: none !important;
+      background-color: currentColor !important;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 24'%3E%3Cpath d='M13.5 1.3L10.6 12.6' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M4.6 12.6L13.8 14.2L13.9 15.6L4 14.2Z'/%3E%3Cpath d='M3.6 15.2L14 16.7L15 22.8L1 18.6Z'/%3E%3C/svg%3E")
+        center / 100% 100% no-repeat !important;
+      transform-origin: 70% 10%;
+    }
+    /* Reflet du libellé pendant le rangement (posé par arczen.uc.js le temps de l'animation,
+       qui fait glisser background-position : un court repeint du seul libellé, au clic). */
+    &[arczen-shine] > .toolbarbutton-text {
+      background: linear-gradient(100deg, var(--arczen-sep-fg) 35%, var(--arc-fg) 50%, var(--arczen-sep-fg) 65%)
+        100% 0 / 300% 100% no-repeat;
+      background-clip: text;
+      color: transparent !important;
+    }
+    &[arczen-off] {
+      display: none !important;
+    }
+  }
+
+  /* Clear : libellé seul (la flèche de Zen n'existe pas dans Arc). */
+  & > .zen-workspace-close-unpinned-tabs-button {
+    padding-inline: calc(9.5px * var(--arc-scale)) calc(9.6px * var(--arc-scale)) !important;
+    & > .toolbarbutton-icon {
+      display: none !important;
+    }
+  }
+}
+/* Section des épinglés repliée (clic sur le titre) : la rangée Tidy / Clear remonte jusqu'au filet
+   sous le titre de l'espace et ne fait plus qu'un avec lui. Zen replie la section en tirant son
+   contenu vers le haut (marge négative), séparateur compris, qu'il laisse dépasser de 4 px ; on
+   remonte toute la liste de la moitié du séparateur moins ces 4,5 px, pour que son trait tombe
+   sur le bas du titre. Le filet de Zen (::before de l'arrowscrollbox, tracé dès que la liste
+   déborde) s'efface tant que la liste n'est pas défilée (« arczen-scrolled », arczen.uc.js) :
+   le trait du séparateur le remplace, Tidy et Clear à droite. Animé avec le repli. */
+zen-workspace > .workspace-arrowscrollbox {
+  transition: margin-top 220ms var(--arc-ease);
+  zen-workspace[collapsedpinnedtabs] > & {
+    margin-top: calc(4.5px - 11px * var(--arc-scale)) !important;
+  }
+  &::before {
+    transition: opacity 220ms var(--arc-ease);
+  }
+  zen-workspace[collapsedpinnedtabs]:not([arczen-scrolled]) > &::before {
+    opacity: 0 !important;
+  }
+  /* La liste remontée chevauche le bas du titre : le titre passe devant elle pour garder clic et
+     survol, Tidy et Clear devant lui. */
+  zen-workspace[collapsedpinnedtabs] > & .pinned-tabs-container-separator > toolbarbutton {
+    position: relative;
+    z-index: 2;
+  }
+}
+zen-workspace[collapsedpinnedtabs] .zen-current-workspace-indicator {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Pied de sidebar ---
+   Arc : bande de 44 pt du haut de la barre au bas de la fenêtre (refs/retour-2/mesures.md,
+   §1 et §8 point 8). Zen pose déjà 5 px de marge sous la barre (padding bas de
+   #navigator-toolbox) : la barre fait donc 44 × échelle − 5 px, icônes centrées
+   verticalement (alignement natif « center »). Sidebar dépliée seulement. */
+:root[zen-sidebar-expanded="true"] #zen-sidebar-foot-buttons {
+  /* Bouton bibliothèque et « + » : 22,4 pt × échelle (28 px natifs à 125 %). */
+  --arc-foot-btn: calc(22.4px * var(--arc-scale));
+  height: calc(44px * var(--arc-scale) - 5px) !important;
+  align-items: center !important;
+  /* Arc (refs/retour-2/06 à 1,92 px/pt, retour-3/08 à 1,90) : icônes centrées à 22 pt du bas
+     de la sidebar, comptés depuis le bas de la fenêtre. Les 5 px de Zen sous la barre
+     décentraient la rangée de 2,5 px vers le haut : on les rend en haut (boîte border-box). */
+  padding-block-start: 5px !important;
+  /* Centre de la bibliothèque à 20,5 pt du bord gauche de la sidebar, centre du « + » à 20 pt
+     du bord droit (Arc 08) ; 5 px de rembourrage de #navigator-toolbox déjà comptés. */
+  padding-inline: calc(9.3px * var(--arc-scale) - 5px) calc(8.8px * var(--arc-scale) - 5px) !important;
+
+  & #zen-library-button,
+  & #zen-create-new-button {
+    width: var(--arc-foot-btn) !important;
+    height: var(--arc-foot-btn) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  /* Bibliothèque : glyphe d'Arc 12,1 × 14,2 pt ; celui de Zen remplit 90 % de sa boîte de
+     20 px (animée en sprite, d'où une mise à l'échelle plutôt qu'un redimensionnement) :
+     boîte de 15,8 pt × échelle, inchangée à 125 %. */
+  & #zen-library-button .zen-library-sprite {
+    scale: calc(0.79 * var(--arc-scale));
+  }
+  /* « + » : glyphe d'Arc 12,3 pt ; celui de Zen occupe 12/16 de l'icône : icône de 16,4 pt. */
+  & #zen-create-new-button .toolbarbutton-icon {
+    width: var(--arc-foot-btn) !important;
+    height: var(--arc-foot-btn) !important;
+    padding: calc(3px * var(--arc-scale)) !important;
+  }
+  /* Espaces : pas de 29,7 pt entre centres (Zen : 30 px fixes, soit 24 pt à 125 %), icônes
+     de 13-14 pt (Zen : 14 px, soit 11,2 pt à 125 %). La largeur posée en ligne par Zen est
+     remplacée ; les boutons se resserrent s'il y a beaucoup d'espaces (rangée défilante de Zen). */
+  & #zen-workspaces-button > toolbarbutton {
+    width: calc(29.7px * var(--arc-scale)) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+    height: var(--arc-foot-btn) !important;
+    min-height: 0 !important;
+  }
+  & #zen-workspaces-button > toolbarbutton img.zen-workspace-icon {
+    width: calc(14px * var(--arc-scale)) !important;
+    height: calc(14px * var(--arc-scale)) !important;
+  }
+  & #zen-workspaces-button > toolbarbutton label.zen-workspace-icon {
+    font-size: calc(12.5px * var(--arc-scale)) !important;
+  }
+  /* Espaces inactifs : Arc les montre en gris à ≈ 35 % de blanc (crêtes 81-110 sur un fond
+     de 26). Zen : 70 % d'opacité sur une icône à 80 %, soit 56 % ; on ramène les icônes à
+     ≈ 36 %. Le point des espaces sans icône (crête 88) est déjà dans la plage d'Arc. */
+  & #zen-workspaces-button > toolbarbutton:not([active="true"], :hover, [dragged="true"]) img.zen-workspace-icon {
+    opacity: 0.65 !important;
+  }
+}
+#zen-sidebar-foot-buttons .toolbarbutton-1 {
+  --toolbarbutton-icon-fill: var(--arc-fg-icon) !important;
+  &:hover {
+    --toolbarbutton-icon-fill: var(--arc-fg-icon-hover) !important;
+  }
+}

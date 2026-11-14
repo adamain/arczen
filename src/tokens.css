@@ -1,0 +1,168 @@
+﻿/* Jetons : mesures relevées sur des captures d'Arc macOS, à raison de 1 pt macOS = 1 px CSS.
+   Tout ce qui fait la taille de la sidebar passe par --arc-scale (préférence « Échelle »). */
+:root {
+  --arc-scale: 1;
+  /* Échelle propre au menu du site (préférence « Échelle du menu du site »), indépendante de la sidebar */
+  --arc-menu-scale: 1;
+  /* Échelle propre à la barre de commande (Ctrl+T) et au panneau d'URL
+     (préférence « Échelle de la barre de commande »), indépendante de la sidebar */
+  --arc-cmd-scale: 1;
+  /* Taille du texte de la barre de commande (préférence « Taille du texte de la barre de
+     commande »), appliquée en plus de --arc-cmd-scale aux seules polices : la barre garde sa taille */
+  --arc-cmd-text: 1;
+
+  /* Couleur de premier plan d'Arc : blanc sur fond sombre, noir sur fond clair.
+     Les textes et icônes secondaires en sont des fractions (mesurées sur Arc sombre). */
+  --arc-fg: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));
+  --arc-fg-tab: color-mix(in srgb, var(--arc-fg) 86%, transparent);      /* libellé d'onglet */
+  --arc-fg-url: color-mix(in srgb, var(--arc-fg) 61%, transparent);      /* texte de la pilule */
+  --arc-fg-icon: color-mix(in srgb, var(--arc-fg) 62%, transparent);     /* flèches, ↻, pied, × */
+  --arc-fg-icon-hover: color-mix(in srgb, var(--arc-fg) 90%, transparent);
+  --arc-fg-off: color-mix(in srgb, var(--arc-fg) 28%, transparent);      /* flèche désactivée */
+  --arc-fg-dim: color-mix(in srgb, var(--arc-fg) 50%, transparent);      /* New Tab */
+  --arc-fg-title: color-mix(in srgb, var(--arc-fg) 48%, transparent);    /* titre d'espace : crête 133-137 sur fond ≈ 25 */
+  --arc-line: color-mix(in srgb, var(--arc-fg) 7%, transparent);         /* filet de séparation */
+
+  /* Dimensions (pt Arc) multipliées par l'échelle */
+  --arc-tab-height: calc(32px * var(--arc-scale));      /* pastille d'onglet */
+  --arc-tab-gap: calc(4px * var(--arc-scale));          /* pas de 36 entre deux onglets */
+  --arc-tile-height: calc(40px * var(--arc-scale));     /* tuiles Favorites */
+  --arc-toolbar-height: calc(34px * var(--arc-scale));  /* rangée feux / flèches */
+  --arc-url-height: calc(32px * var(--arc-scale));      /* pilule d'URL */
+  --arc-font-tab: calc(13px * var(--arc-scale));        /* onglets, New Tab */
+  --arc-font-small: calc(12px * var(--arc-scale));      /* texte de la pilule d'URL */
+  --arc-font-title: calc(12px * var(--arc-scale));      /* titre d'espace, étiquettes (semi-gras) */
+  /* macOS resserre SF Pro aux petites tailles (table « trak » appliquée par CoreText,
+     ignorée sous Windows) : les mots d'Arc sont ≈ 6 % plus courts à corps égal. */
+  --arc-tracking: -0.033em;
+  --arc-icon: calc(16px * var(--arc-scale));            /* favicons */
+  --arc-icon-nav: calc(18px * var(--arc-scale));        /* boîte des glyphes ← → ↻ (dessin de 12,5 pt de large) */
+
+  /* --- Coins continus d'Arc (macOS) ---
+     Arc dessine des coins « continus » : la courbe quitte le bord plus loin et plus doucement
+     qu'un quart de cercle. Calibrage sur les profils de coin des captures d'Arc (pilule
+     d'URL de retour-4/10, tuiles de retour-3/08 : bord mesuré rangée par rangée, ajusté par
+     moindres carrés) : le meilleur modèle est superellipse(1.4) (exposant 2^1,4 ≈ 2,64),
+     d'un rayon 1,25 fois le rayon du cercle qui s'en approche le plus (pilule : cercle 10,5 pt
+     → 13,1 pt ; tuiles : 10,7 → 13,3 ; écart résiduel ≈ 0,1 px contre 0,24 px pour un cercle).
+     Règle pour toute surface d'Arc :
+       border-radius: calc(<rayon circulaire mesuré sur Arc> * var(--arc-corner-k));
+       corner-shape: var(--arc-corner-shape);
+     (rayons déjà convertis ci-dessous : --arc-radius-pill, -tile, -panel, -btn).
+     Le contour (outline, bordure) et le fond suivent la forme ; l'ombre portée aussi.
+     Zen pose déjà superellipse(--zen-squircle-value) partout : la valeur est la même, mais
+     une surface qui garde son rayon d'origine paraît plus carrée qu'Arc.
+     Surfaces laissées aux lots suivants : panneau des extensions, barre de commande. */
+  --arc-corner-shape: superellipse(1.4);
+  --arc-corner-k: 1.25;
+  --arc-radius: calc(10px * var(--arc-scale));          /* onglets (rayon brut, forme de Zen) */
+  --arc-radius-pill: calc(10.5px * var(--arc-scale) * var(--arc-corner-k));  /* pilule d'URL : cercle 10,5 pt (A10) */
+  --arc-radius-tile: calc(10.5px * var(--arc-scale) * var(--arc-corner-k));  /* tuiles Favorites : cercle 10,5-10,7 pt */
+  --arc-radius-panel: calc(10px * var(--arc-corner-k));                      /* panneau compact : cercle 10 pt (A2) */
+  --arc-radius-btn: calc(6px * var(--arc-scale) * var(--arc-corner-k));     /* survol des boutons et icônes de la pilule */
+  --arc-radius-card: 12px;                              /* carte de la page web (coin rond de Zen, inchangé) */
+  /* Survol des boutons de la sidebar (flèches, ↻, icônes de la pilule) : voile blanc ≈ 10 % */
+  --arc-hover-bg: light-dark(rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.1));
+  --arc-active-bg: light-dark(rgba(0, 0, 0, 0.11), rgba(255, 255, 255, 0.15));
+  --arc-float-gap: 4.5px;                               /* écart de la sidebar compacte aux bords de la fenêtre */
+  --arc-gutter: 8px;
+  --arc-dim: 0.55;
+  --arc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --arc-dur: 160ms;
+
+  /* Coins « continus » plus ronds que le réglage Windows de Zen (2.3, d'aspect carré). */
+  --zen-squircle-value: 1.4 !important;
+  --zen-webview-border-radius: calc(var(--arc-radius-card) * var(--zen-squircle-value)) !important;
+
+  --tab-min-height: var(--arc-tab-height) !important;
+
+  /* Barre de commande (Ctrl+T) et panneau d'URL : matière commune.
+     Sombre relevé sur Arc ; clair déduit (même opacité, mêmes contrastes inversés). */
+  --arc-cmd-bg: light-dark(rgba(247, 247, 248, 0.86), rgba(28, 28, 28, 0.89));
+  --arc-cmd-bg-opaque: light-dark(rgb(244, 244, 245), rgb(33, 33, 33)); /* sans flou */
+  --arc-cmd-blur: 28px;
+  --arc-cmd-ring-in: light-dark(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.11)); /* liseré clair intérieur */
+  --arc-cmd-ring-out: light-dark(rgba(0, 0, 0, 0.13), rgba(0, 0, 0, 0.6));        /* liseré sombre extérieur */
+  --arc-cmd-shadow: 0 12px 28px -6px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.5));
+  --arc-cmd-line: color-mix(in srgb, var(--arc-fg) 6%, transparent);       /* filet sous le champ */
+  --arc-cmd-placeholder: color-mix(in srgb, var(--arc-fg) 60%, transparent);
+  --arc-cmd-title: color-mix(in srgb, var(--arc-fg) 87%, transparent);     /* titre non sélectionné */
+  --arc-cmd-url: color-mix(in srgb, var(--arc-fg) 48%, transparent);       /* URL, « Switch to Tab » au repos */
+  --arc-cmd-url-sel: color-mix(in srgb, var(--arc-fg) 62%, transparent);   /* URL de la rangée choisie */
+  --arc-cmd-row-sel: color-mix(in srgb, var(--arc-fg) 3%, transparent);    /* rangée choisie : presque invisible */
+  --arc-cmd-row-hover: color-mix(in srgb, var(--arc-fg) 4%, transparent);
+  --arc-cmd-chip: rgb(255, 255, 255);                                      /* pastille sous le favicon */
+  --arc-cmd-chip-ring: light-dark(rgba(0, 0, 0, 0.12), transparent);
+  --arc-cmd-chip-fg: rgb(28, 28, 28);                                      /* icône sur la pastille */
+  --arc-cmd-btn: color-mix(in srgb, var(--arc-fg) 6%, transparent);        /* bouton flèche au repos */
+  --arc-cmd-btn-fg: color-mix(in srgb, var(--arc-fg) 70%, transparent);
+  --arc-panel-row-sel: color-mix(in srgb, var(--arc-fg) 9%, transparent);  /* panneau d'URL : rangée choisie */
+  --arc-panel-title: light-dark(rgba(0, 0, 0, 0.82), rgb(217, 217, 217));
+  --arc-cmd-selection: light-dark(rgb(203, 203, 207), rgb(120, 120, 122)); /* URL sélectionnée dans le champ */
+}
+
+/* Échelle de la sidebar : 100 % = Arc à l'identique. Remplace l'ancienne préférence « Densité ». */
+@media -moz-pref("arczen.scale", "80") { :root { --arc-scale: 0.8; } }
+@media -moz-pref("arczen.scale", "85") { :root { --arc-scale: 0.85; } }
+@media -moz-pref("arczen.scale", "90") { :root { --arc-scale: 0.9; } }
+@media -moz-pref("arczen.scale", "95") { :root { --arc-scale: 0.95; } }
+@media -moz-pref("arczen.scale", "105") { :root { --arc-scale: 1.05; } }
+@media -moz-pref("arczen.scale", "110") { :root { --arc-scale: 1.1; } }
+@media -moz-pref("arczen.scale", "115") { :root { --arc-scale: 1.15; } }
+@media -moz-pref("arczen.scale", "120") { :root { --arc-scale: 1.2; } }
+@media -moz-pref("arczen.scale", "125") { :root { --arc-scale: 1.25; } }
+@media -moz-pref("arczen.scale", "130") { :root { --arc-scale: 1.3; } }
+@media -moz-pref("arczen.scale", "140") { :root { --arc-scale: 1.4; } }
+@media -moz-pref("arczen.scale", "150") { :root { --arc-scale: 1.5; } }
+
+/* Échelle de la barre de commande et du panneau d'URL : 100 % = Arc à l'identique. */
+@media -moz-pref("arczen.cmd-scale", "80") { :root { --arc-cmd-scale: 0.8; } }
+@media -moz-pref("arczen.cmd-scale", "85") { :root { --arc-cmd-scale: 0.85; } }
+@media -moz-pref("arczen.cmd-scale", "90") { :root { --arc-cmd-scale: 0.9; } }
+@media -moz-pref("arczen.cmd-scale", "95") { :root { --arc-cmd-scale: 0.95; } }
+@media -moz-pref("arczen.cmd-scale", "105") { :root { --arc-cmd-scale: 1.05; } }
+@media -moz-pref("arczen.cmd-scale", "110") { :root { --arc-cmd-scale: 1.1; } }
+@media -moz-pref("arczen.cmd-scale", "115") { :root { --arc-cmd-scale: 1.15; } }
+@media -moz-pref("arczen.cmd-scale", "120") { :root { --arc-cmd-scale: 1.2; } }
+@media -moz-pref("arczen.cmd-scale", "125") { :root { --arc-cmd-scale: 1.25; } }
+@media -moz-pref("arczen.cmd-scale", "130") { :root { --arc-cmd-scale: 1.3; } }
+@media -moz-pref("arczen.cmd-scale", "140") { :root { --arc-cmd-scale: 1.4; } }
+@media -moz-pref("arczen.cmd-scale", "150") { :root { --arc-cmd-scale: 1.5; } }
+@media -moz-pref("arczen.cmd-text", "85") { :root { --arc-cmd-text: 0.85; } }
+@media -moz-pref("arczen.cmd-text", "90") { :root { --arc-cmd-text: 0.9; } }
+@media -moz-pref("arczen.cmd-text", "95") { :root { --arc-cmd-text: 0.95; } }
+@media -moz-pref("arczen.cmd-text", "105") { :root { --arc-cmd-text: 1.05; } }
+@media -moz-pref("arczen.cmd-text", "110") { :root { --arc-cmd-text: 1.1; } }
+@media -moz-pref("arczen.cmd-text", "115") { :root { --arc-cmd-text: 1.15; } }
+@media -moz-pref("arczen.cmd-text", "120") { :root { --arc-cmd-text: 1.2; } }
+@media -moz-pref("arczen.cmd-text", "125") { :root { --arc-cmd-text: 1.25; } }
+@media -moz-pref("arczen.cmd-text", "130") { :root { --arc-cmd-text: 1.3; } }
+
+/* Épaisseur des bords autour de la page (préférence « Épaisseur des bords ») :
+   pourcentage des 8 px de Zen (--zen-element-separation, posé en ligne sur la racine,
+   d'où le !important de la feuille utilisateur). 100 = Zen d'origine : aucune surcharge.
+   À 0, la page touche la fenêtre et la sidebar : la carte perd son arrondi (coins droits). */
+@media -moz-pref("arczen.border-size", "0") {
+  :root { --zen-element-separation: 0px !important; --arc-radius-card: 0px; }
+}
+@media -moz-pref("arczen.border-size", "25") { :root { --zen-element-separation: 2px !important; } }
+@media -moz-pref("arczen.border-size", "50") { :root { --zen-element-separation: 4px !important; } }
+@media -moz-pref("arczen.border-size", "75") { :root { --zen-element-separation: 6px !important; } }
+@media -moz-pref("arczen.border-size", "125") { :root { --zen-element-separation: 10px !important; } }
+@media -moz-pref("arczen.border-size", "150") { :root { --zen-element-separation: 12px !important; } }
+@media -moz-pref("arczen.border-size", "175") { :root { --zen-element-separation: 14px !important; } }
+@media -moz-pref("arczen.border-size", "200") { :root { --zen-element-separation: 16px !important; } }
+
+/* Échelle du menu du site : 100 % = Arc à l'identique (1 pt = 1 px CSS). */
+@media -moz-pref("arczen.menu-scale", "80") { :root { --arc-menu-scale: 0.8; } }
+@media -moz-pref("arczen.menu-scale", "85") { :root { --arc-menu-scale: 0.85; } }
+@media -moz-pref("arczen.menu-scale", "90") { :root { --arc-menu-scale: 0.9; } }
+@media -moz-pref("arczen.menu-scale", "95") { :root { --arc-menu-scale: 0.95; } }
+@media -moz-pref("arczen.menu-scale", "105") { :root { --arc-menu-scale: 1.05; } }
+@media -moz-pref("arczen.menu-scale", "110") { :root { --arc-menu-scale: 1.1; } }
+@media -moz-pref("arczen.menu-scale", "115") { :root { --arc-menu-scale: 1.15; } }
+@media -moz-pref("arczen.menu-scale", "120") { :root { --arc-menu-scale: 1.2; } }
+@media -moz-pref("arczen.menu-scale", "125") { :root { --arc-menu-scale: 1.25; } }
+@media -moz-pref("arczen.menu-scale", "130") { :root { --arc-menu-scale: 1.3; } }
+@media -moz-pref("arczen.menu-scale", "140") { :root { --arc-menu-scale: 1.4; } }
+@media -moz-pref("arczen.menu-scale", "150") { :root { --arc-menu-scale: 1.5; } }
